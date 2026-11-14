@@ -43,5 +43,5 @@ html = html.replace(
   () =>
     `<template id="third-party-notices"><pre>${notices}</pre></template></body>`,
 );
-fs.writeFileSync(path.join(root, "..", "ClassArcade-review.html"), html);
-console.log("Portable browser prototype: ../ClassArcade-review.html");
+fs.writeFileSync(path.join(root, "..", "ClassArcade-Immersive.html"), html);
+console.log("Portable browser prototype: ../ClassArcade-Immersive.html");

@@ -1,7 +1,6 @@
 import { CommandHome } from "./concepts/CommandHome";
 import { ImmersiveHome } from "./concepts/ImmersiveHome";
 import { ConstellationHome } from "./concepts/ConstellationHome";
-import { asset } from "./assets";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import {
@@ -44,12 +43,8 @@ function saved<T>(key: string, fallback: T): T {
   }
 }
 export default function App() {
-  const [concept, setConcept] = useState(() => {
-    const c = new URLSearchParams(location.search).get("concept");
-    return c && ["a", "b", "c"].includes(c) ? c : "a";
-  });
+  const [concept] = useState<string>("b");
   const [page, setPage] = useState("Home");
-  const [compare, setCompare] = useState(location.hash === "#compare");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All games");
   const [genre, setGenre] = useState("All genres");
@@ -118,15 +113,6 @@ export default function App() {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
-  function choose(id: string) {
-    setConcept(id);
-    setCompare(false);
-    setPage("Home");
-    setQuery("");
-    setFilter("All games");
-    setGenre("All genres");
-    history.replaceState(null, "", `?concept=${id}`);
-  }
   function go(p: string) {
     setPage(p);
     setQuery("");
@@ -199,100 +185,12 @@ export default function App() {
   return (
     <MotionConfig reducedMotion={reduced ? "always" : "user"}>
       <div
-        className={`app concept-${concept} ${reduced ? "reduce-motion" : ""}`}
+        className={`app immersive-edition concept-${concept} ${reduced ? "reduce-motion" : ""}`}
       >
         <a className="skip-link" href="#content">
           Skip to content
         </a>
-        <div className="review-bar">
-          <span>
-            <span className="review-dot" /> CLASSARCADE{" "}
-            <span className="review-muted">/ DESIGN EXPLORATIONS</span>
-          </span>
-          <div>
-            {concepts.map((c, i) => (
-              <button
-                key={c.id}
-                aria-pressed={!compare && concept === c.id}
-                className={!compare && concept === c.id ? "current" : ""}
-                onClick={() => choose(c.id)}
-              >
-                <span>{String.fromCharCode(65 + i)}</span> {c.name}
-              </button>
-            ))}
-            <button
-              className={compare ? "current" : ""}
-              onClick={() => {
-                setCompare(true);
-                history.replaceState(null, "", "#compare");
-              }}
-            >
-              Compare <ArrowUpRight size={13} />
-            </button>
-          </div>
-          <span className="prototype-tag">INTERACTIVE PROTOTYPE</span>
-        </div>
-        {compare ? (
-          <main className="comparison" id="content">
-            <div className="brand">
-              <Gamepad2 />
-              ClassArcade<span>®</span>
-            </div>
-            <div className="comparison-heading">
-              <p>One library. Endless learning.</p>
-              <h1>
-                Three ways to
-                <br />
-                press play.
-              </h1>
-              <p>
-                A new home for learning through games.
-                <br />
-                Explore three distinct directions for ClassArcade.
-              </p>
-            </div>
-            <div className="comparison-grid">
-              {concepts.map((c, i) => (
-                <button
-                  className={"concept-preview preview-" + c.id}
-                  key={c.id}
-                  onClick={() => choose(c.id)}
-                >
-                  <div className="preview-image">
-                    <img src={asset(`/art/game-${[0, 3, 5][i]}.webp`)} alt="" />
-                    <span>0{i + 1}</span>
-                    <strong>{c.name}</strong>
-                    <ArrowUpRight />
-                  </div>
-                  <div className="preview-caption">
-                    <span>{c.tone}</span>
-                    <h2>{c.label}</h2>
-                    <p>{c.description}</p>
-                    <b>
-                      Explore concept {c.id.toUpperCase()}{" "}
-                      <ChevronRight size={16} />
-                    </b>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="recommendation">
-              <span>OUR RECOMMENDATION</span>
-              <h2>Command Center</h2>
-              <p>
-                The strongest everyday home for students and teachers. Familiar
-                navigation, compact library tools, and artwork with room to
-                breathe. Immersive Gaming brings the atmosphere; Next Generation
-                reimagines how skills connect.
-              </p>
-            </div>
-            <footer>
-              Synthetic data · Original concept artwork · All game titles are
-              concepts · No public deployment
-            </footer>
-          </main>
-        ) : (
-          <>
+        <>
             <header className="topbar">
               <button
                 className="brand"
@@ -786,7 +684,6 @@ export default function App() {
               </main>
             </div>
           </>
-        )}
         {modal === "settings" && (
           <Dialog title="Make yourself at home" onClose={() => setModal(null)}>
             <p className="dialog-subtitle">

@@ -2891,3 +2891,8 @@ dialog::backdrop {
     top: 79px;
   }
 }
+
+/* Standalone Immersive edition: the exploration bar is intentionally absent. */
+.immersive-edition .workspace{min-height:calc(100vh - 79px)}
+.immersive-edition .footer-letter{display:none}
+@media(max-width:700px){.immersive-edition .role{top:16px}.immersive-edition .top-actions>.icon-button{top:14px}.immersive-edition .workspace{min-height:calc(100vh - 113px)}}
