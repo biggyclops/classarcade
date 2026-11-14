@@ -1,0 +1,15 @@
+# Milestone boundaries
+
+- All seven games are fictional concept titles; no educational gameplay, grading, real downloads, achievements, multiplayer, cloud saves, or content recommendation engine is built.
+- Teacher/student is a navigation preview, not authentication or authorization. Classroom assignment, recent history, progress, and session duration are synthetic. Assignment selection is saved locally and does not notify a classroom.
+- Favorites, collections, import metadata, preferences, and recent history persist only in this browser's storage. Clearing browser data removes them. Browser storage policies can disable persistence. No backend, export/sync, or cross-device data layer is included.
+- Import validates only a small JSON manifest's title and version and previews metadata. It does not unpack packages, verify signatures/licenses, sandbox games, or execute game code. Real modular importing will need schema versioning, signed manifests, integrity hashes, origin isolation, capability permissions and migration rules.
+- Full production PWA/service-worker offline caching is deferred. The portable review HTML embeds its runtime, styles, fonts and art, and was verified with all additional resource requests blocked. `file://` testing was blocked by the managed browser's policy; use a local HTTP server if the user's browser also restricts local files.
+- Constellation connections are illustrative, not derived from student ability, prerequisites, or validated curriculum mappings. There is no student profiling.
+- Personal collections can be created and filtered but not renamed/deleted in this milestone. Imported manifest records have no artwork. No gamepad support or OS-level game launching is included.
+- Automated accessibility checks cover the three home screens and sampled detail/settings dialogs, with keyboard, focus and mobile checks. A full screen-reader review, 200–400% zoom audit, contrast evaluation across every artwork state, and student usability study remain.
+- Chromium is the tested engine. Actual ChromeOS hardware, touch devices, Safari, Firefox and managed school policies are untested. Performance figures use a Linux host with simulated CPU throttling and fast local network; they are not physical Chromebook benchmarks or field Core Web Vitals.
+- Figma Community detailed inspection and Behance direct access were unavailable. Their discovery results are documented; they are not claimed as fully reviewed.
+- Atlas, Hades, Mini-Beast and Hermes were unavailable in the connected environment. No ComfyUI installation was exposed. The available image generator and cloud workspace were used instead. Antigravity and Astra production were not accessed or changed.
+- The environment does not expose a browser preview forwarding tool. The server is running locally in the cloud workspace on port 5173; its localhost URL is not automatically a URL on the user's own computer. The portable file/source bundle are the review handoff.
+- Original art and general patterns were created/studied independently. No measured claim of superiority to Antigravity is made, since those prototypes were not inspected.

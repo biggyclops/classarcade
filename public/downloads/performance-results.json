@@ -1,0 +1,41 @@
+{
+  "environment": "Chromium headless on Linux, 1366x768, 4x CPU slowdown, localhost without network throttling. Single cold browser context per concept; not physical Chromebook benchmark.",
+  "results": [
+    {
+      "concept": "a",
+      "lcp": 1088,
+      "cls": 0.004332200238199224,
+      "domContentLoaded": 350.39999999990687,
+      "load": 351.5,
+      "resources": 18,
+      "transferBytes": 1091678,
+      "heapBytes": 3168375,
+      "errors": []
+    },
+    {
+      "concept": "b",
+      "lcp": 1244,
+      "cls": 0.0004127061583388477,
+      "domContentLoaded": 298.10000000009313,
+      "load": 302.5,
+      "resources": 17,
+      "transferBytes": 1018790,
+      "heapBytes": 3351686,
+      "errors": []
+    },
+    {
+      "concept": "c",
+      "lcp": 944,
+      "cls": 0.0007234446980180111,
+      "domContentLoaded": 369.30000000004657,
+      "load": 371.10000000009313,
+      "resources": 17,
+      "transferBytes": 791432,
+      "heapBytes": 3480903,
+      "errors": []
+    }
+  ],
+  "portable": {
+    "errors": []
+  }
+}
