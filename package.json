@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "games:catalog": "node scripts/generate-game-catalog.mjs",
+    "dev": "npm run games:catalog && vite --host 0.0.0.0",
+    "build": "npm run games:catalog && tsc -b && vite build",
     "test": "playwright test",
     "portable": "npm run build && node scripts/portable.mjs",
     "preview": "vite preview --host 0.0.0.0"

@@ -13,7 +13,7 @@ export function Artwork({
   return (
     <img
       className={"art " + className}
-      src={asset(`/art/game-${game.id}.webp`)}
+      src={game.cover ? asset(game.cover) : asset(`/art/game-${game.id}.webp`)}
       alt=""
       loading={game.id === 0 ? "eager" : "lazy"}
     />

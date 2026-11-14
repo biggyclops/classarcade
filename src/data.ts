@@ -1,3 +1,5 @@
+import dropInGames from "./generated-games.json";
+
 export type Game = {
   id: number;
   title: string;
@@ -9,8 +11,10 @@ export type Game = {
   time: string;
   progress: number;
   classroom: string[];
+  cover?: string;
+  launchUrl?: string;
 };
-export const games: Game[] = [
+const conceptGames: Game[] = [
   {
     id: 0,
     title: "Slope: Overdrive",
@@ -102,6 +106,10 @@ export const games: Game[] = [
     progress: 15,
     classroom: ["Individualized Instruction"],
   },
+];
+export const games: Game[] = [
+  ...conceptGames,
+  ...(dropInGames as Game[]),
 ];
 export const classroomNames = [
   "Algebra 1A",

@@ -1,0 +1,11 @@
+{
+  "title": "My Classroom Game",
+  "short": "MY GAME",
+  "genre": "Practice challenge",
+  "skill": "Replace with the learning skill",
+  "description": "Replace this with a short student-friendly description.",
+  "color": "#85c9bb",
+  "time": "10 min",
+  "classroom": ["Algebra 1A"],
+  "cover": "cover.svg"
+}

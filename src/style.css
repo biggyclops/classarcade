@@ -1872,6 +1872,18 @@ dialog::backdrop {
 .launch-preview {
   text-align: center;
 }
+.game-player {
+  display: grid;
+  gap: 14px;
+  width: min(88vw, 1100px);
+}
+.game-player iframe {
+  width: 100%;
+  height: min(72vh, 720px);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 14px;
+  background: #0b0714;
+}
 .launch-preview > .art {
   height: 190px;
   margin-bottom: 25px;

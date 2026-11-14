@@ -948,7 +948,20 @@ export default function App() {
           </Dialog>
         )}
         {launch && (
-          <Dialog title="Launch preview" onClose={() => setLaunch(null)}>
+          <Dialog title={launch.launchUrl ? launch.title : "Launch preview"} onClose={() => setLaunch(null)}>
+            {launch.launchUrl ? (
+              <div className="game-player">
+                <iframe
+                  src={launch.launchUrl}
+                  title={launch.title}
+                  allow="fullscreen; autoplay"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+                />
+                <button className="secondary" onClick={() => setLaunch(null)}>
+                  <ChevronLeft size={16} /> Back to ClassArcade
+                </button>
+              </div>
+            ) : (
             <div className="launch-preview">
               <Artwork game={launch} />
               <Gamepad2 size={42} />
@@ -973,6 +986,7 @@ export default function App() {
                 Back to ClassArcade <ChevronRight size={16} />
               </button>
             </div>
+            )}
           </Dialog>
         )}
         <AnimatePresence>
