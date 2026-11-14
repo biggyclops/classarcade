@@ -1,0 +1,11 @@
+{
+  "title": "Metro Line Architect",
+  "short": "METRO ARCHITECT",
+  "genre": "City planning simulation",
+  "skill": "Writing slope-intercept equations",
+  "description": "Design realistic transit routes by calculating slope and y-intercept from engineering briefs, maps, points, and station data.",
+  "color": "#55d6be",
+  "time": "20 min",
+  "classroom": ["Algebra 1A", "Algebra 1B"],
+  "cover": "city.png"
+}

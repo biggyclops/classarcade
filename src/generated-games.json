@@ -1,6 +1,23 @@
 [
   {
     "id": 1000,
+    "title": "Metro Line Architect",
+    "short": "METRO ARCHITECT",
+    "genre": "City planning simulation",
+    "skill": "Writing slope-intercept equations",
+    "description": "Design realistic transit routes by calculating slope and y-intercept from engineering briefs, maps, points, and station data.",
+    "color": "#55d6be",
+    "time": "20 min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Algebra 1B"
+    ],
+    "cover": "/games/metro-line-architect/city.png",
+    "launchUrl": "/games/metro-line-architect/index.html"
+  },
+  {
+    "id": 1001,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",
     "genre": "Tactical math game",
