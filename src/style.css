@@ -1884,6 +1884,37 @@ dialog::backdrop {
   border-radius: 14px;
   background: #0b0714;
 }
+.playable-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  padding: 12px;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+.playable-dialog .dialog-head {
+  margin-bottom: 8px;
+}
+.playable-dialog .game-player {
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+}
+.playable-dialog .game-player iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 8px;
+}
+.playable-dialog .game-player > button {
+  justify-self: end;
+}
 .launch-preview > .art {
   height: 190px;
   margin-bottom: 25px;

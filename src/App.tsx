@@ -910,7 +910,9 @@ export default function App() {
               </span>
             </div>
             <div className="detail-copy">
-              <span className="feature-label">ORIGINAL CONCEPT TITLE</span>
+              <span className="feature-label">
+                {detail.launchUrl ? "PLAYABLE CLASSROOM GAME" : "ORIGINAL CONCEPT TITLE"}
+              </span>
               <h2>{detail.title}</h2>
               <p>{detail.description}</p>
               <div className="detail-facts">
@@ -928,7 +930,9 @@ export default function App() {
                 </div>
               </div>
               <div className="hero-buttons">
-                <Primary onClick={() => play(detail)}>Launch preview</Primary>
+                <Primary onClick={() => play(detail)}>
+                  {detail.launchUrl ? "Play game" : "Launch preview"}
+                </Primary>
                 <button
                   className="secondary"
                   onClick={() => favorite(detail.id)}
@@ -943,13 +947,19 @@ export default function App() {
                 </button>
               </div>
               <p className="simulation-note">
-                Concept title · Gameplay is not built in this milestone.
+                {detail.launchUrl
+                  ? "Runs entirely in your browser · No download required."
+                  : "Concept title · Gameplay is not built in this milestone."}
               </p>
             </div>
           </Dialog>
         )}
         {launch && (
-          <Dialog title={launch.launchUrl ? launch.title : "Launch preview"} onClose={() => setLaunch(null)}>
+          <Dialog
+            title={launch.launchUrl ? launch.title : "Launch preview"}
+            onClose={() => setLaunch(null)}
+            className={launch.launchUrl ? "playable-dialog" : ""}
+          >
             {launch.launchUrl ? (
               <div className="game-player">
                 <iframe

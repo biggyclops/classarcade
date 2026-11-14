@@ -76,10 +76,12 @@ export function Dialog({
   title,
   onClose,
   children,
+  className = "",
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef(document.activeElement as HTMLElement);
@@ -93,6 +95,7 @@ export function Dialog({
   }, []);
   return (
     <dialog
+      className={className}
       aria-label={title}
       ref={ref}
       onCancel={onClose}
