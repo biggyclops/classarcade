@@ -1,0 +1,3195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>3.1 Sandbox // Slope-Intercept Laser Defense</title>
+  <style>
+    /* ==========================================================================
+       CORE RESET & HIGH-CONTRAST CLASSROOM TACTICAL THEME (SECTION 3.1 SANDBOX)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050914;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       TOP NAVIGATION & TELEMETRY BAR
+       ========================================================================== */
+    #top-bar {
+      height: 54px;
+      min-height: 54px;
+      background: linear-gradient(180deg, #0f172a 0%, #090e1c 100%);
+      border-bottom: 1px solid #1e293b;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .brand-icon {
+      padding: 0 9px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #059669, #34d399);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 900;
+      font-size: 14px;
+      color: #040812;
+      box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      color: #f8fafc;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: #34d399;
+      font-weight: 700;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+    }
+
+    /* Grid Click Tool Selector (Inspect / Add Target / Add Satellite / Erase) */
+    .tool-pills {
+      display: flex;
+      background: #040812;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .tool-pill {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tool-pill:hover {
+      color: #f8fafc;
+    }
+
+    .tool-pill.active {
+      background: #1e293b;
+      color: #34d399;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .hud-stats {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .stat-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.15;
+    }
+
+    .stat-chip .lbl {
+      font-size: 9px;
+      color: #64748b;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .stat-chip .val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .stat-chip .val.emerald { color: #34d399; }
+    .stat-chip .val.cyan { color: #38bdf8; }
+
+    .icon-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+
+    .icon-btn:hover {
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    .demo-launch-btn {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.32));
+      border: 1px solid #fbbf24;
+      color: #fde68a;
+      border-radius: 7px;
+      padding: 6px 11px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+    }
+
+    .demo-launch-btn:hover {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #040812;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.55);
+    }
+
+    .demo-launch-btn.active {
+      background: #fbbf24;
+      color: #040812;
+    }
+
+    /* ==========================================================================
+       MAIN WORKSPACE (LEFT COORDINATE CANVAS + RIGHT 3.1 SANDBOX CONSOLE)
+       ========================================================================== */
+    #workspace {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      position: relative;
+    }
+
+    #grid-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0a1326 0%, #040812 100%);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Floating Section 3.1 Scenario Banner on Canvas Top */
+    #mission-banner {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      border-radius: 10px;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(6px);
+      z-index: 10;
+      max-width: 94%;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .wave-tag {
+      background: #059669;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
+
+    #preset-select {
+      background: #090e1c;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #preset-select:focus {
+      border-color: #34d399;
+    }
+
+    /* Coordinate Readout Pill (Bottom-Left of Canvas) */
+    #cursor-readout {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #cursor-readout strong {
+      color: #34d399;
+    }
+
+    /* ==========================================================================
+       INTERACTIVE DEMO WALKTHROUGH OVERLAY HUD (WITH VOICE OVERLAY)
+       ========================================================================== */
+    #demo-hud {
+      position: absolute;
+      bottom: 46px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(94%, 640px);
+      background: rgba(11, 17, 32, 0.95);
+      border: 1.5px solid #fbbf24;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.78), 0 0 22px rgba(251, 191, 36, 0.22);
+      backdrop-filter: blur(8px);
+      z-index: 18;
+      display: none;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    #demo-hud.visible {
+      display: flex;
+    }
+
+    .demo-hud-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .demo-badge {
+      background: #fbbf24;
+      color: #040812;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+    }
+
+    .demo-step-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f8fafc;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .demo-progress-track {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      width: 100%;
+    }
+
+    .demo-prog-seg {
+      height: 5px;
+      border-radius: 3px;
+      background: #1e293b;
+      transition: background 0.25s ease;
+    }
+
+    .demo-prog-seg.done {
+      background: #34d399;
+    }
+
+    .demo-prog-seg.current {
+      background: #fbbf24;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.65);
+    }
+
+    #demo-narration {
+      font-size: 12.5px;
+      line-height: 1.48;
+      color: #e2e8f0;
+    }
+
+    #demo-narration strong {
+      color: #38bdf8;
+    }
+
+    #demo-narration em {
+      font-style: normal;
+      color: #fbbf24;
+      font-weight: 700;
+    }
+
+    .demo-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .demo-nav-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-ctrl-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .demo-ctrl-btn:hover:not(:disabled) {
+      border-color: #38bdf8;
+      background: #273549;
+    }
+
+    .demo-ctrl-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .demo-ctrl-btn.primary {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-color: #38bdf8;
+      color: #030712;
+      font-weight: 900;
+    }
+
+    .demo-ctrl-btn.exit {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: #34d399;
+      color: #6ee7b7;
+      font-weight: 800;
+    }
+
+    .demo-ctrl-btn.exit:hover {
+      background: #10b981;
+      color: #030712;
+    }
+
+    .demo-voice-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid #38bdf8;
+      color: #bae6fd;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .demo-voice-toggle:hover {
+      background: rgba(56, 189, 248, 0.28);
+      color: #ffffff;
+    }
+
+    .demo-voice-toggle.muted {
+      background: #1e293b;
+      border-color: #475569;
+      color: #94a3b8;
+    }
+
+    .voice-wave {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 11px;
+    }
+
+    .voice-wave span {
+      width: 2.5px;
+      height: 4px;
+      background: #38bdf8;
+      border-radius: 2px;
+      transition: height 0.15s ease;
+    }
+
+    .demo-voice-toggle.speaking .voice-wave span {
+      animation: voiceBar 0.55s infinite ease-in-out;
+    }
+
+    .demo-voice-toggle.speaking .voice-wave span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .demo-voice-toggle.speaking .voice-wave span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes voiceBar {
+      0%, 100% { height: 3px; }
+      50% { height: 11px; }
+    }
+
+    .demo-input-highlight {
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.35), 0 0 18px rgba(251, 191, 36, 0.45) !important;
+      background: #172038 !important;
+    }
+
+    .demo-fire-pulse {
+      animation: demoFirePulse 1.1s infinite ease-in-out;
+    }
+
+    @keyframes demoFirePulse {
+      0%, 100% {
+        box-shadow: 0 4px 18px rgba(56, 189, 248, 0.45);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 28px rgba(251, 191, 36, 0.9);
+        transform: scale(1.02);
+      }
+    }
+
+    /* ==========================================================================
+       RIGHT TACTICAL EQUATION & 3.1 SANDBOX CONSOLE
+       ========================================================================== */
+    #control-panel {
+      width: 390px;
+      min-width: 345px;
+      background: #0b1120;
+      border-left: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px;
+      gap: 10px;
+      overflow-y: auto;
+      z-index: 15;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 11px 13px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+
+    /* Live Formatted Equation Banner */
+    #equation-display {
+      background: #040812;
+      border: 1.5px solid #059669;
+      border-radius: 10px;
+      padding: 9px 12px;
+      text-align: center;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 22px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: 0.5px;
+      box-shadow: inset 0 0 16px rgba(5, 150, 105, 0.22);
+    }
+
+    #equation-display .m-part { color: #38bdf8; }
+    #equation-display .b-part { color: #fbbf24; }
+
+    /* Slope & Intercept Inputs */
+    .input-row {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 9px;
+      margin-top: 9px;
+    }
+
+    .field-box {
+      background: #090e1c;
+      border: 1px solid #1e293b;
+      border-radius: 9px;
+      padding: 8px 9px;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .field-label.slope-lbl { color: #38bdf8; }
+    .field-label.int-lbl { color: #fbbf24; }
+
+    .slope-mode-toggle {
+      background: #1e293b;
+      border: none;
+      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .slope-mode-toggle:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    .fraction-inputs {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .num-input {
+      width: 100%;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 7px;
+      color: #f8fafc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 17px;
+      font-weight: 800;
+      text-align: center;
+      padding: 5px 4px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .num-input:focus {
+      border-color: #38bdf8;
+      background: #131d36;
+    }
+
+    .num-input.b-input:focus {
+      border-color: #fbbf24;
+    }
+
+    .frac-slash {
+      font-size: 19px;
+      font-weight: 800;
+      color: #64748b;
+    }
+
+    .helper-caption {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .nudge-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .nudge-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .nudge-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+
+    /* Fire Laser CTA Button */
+    #fire-btn {
+      width: 100%;
+      margin-top: 9px;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+      color: #030712;
+      font-size: 14.5px;
+      font-weight: 900;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(52, 211, 153, 0.35);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #fire-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(52, 211, 153, 0.55);
+    }
+
+    #fire-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 3.1 Ordered Pairs (x, y) Value Table */
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11.5px;
+      text-align: center;
+    }
+
+    .table-cell {
+      background: #090e1c;
+      border: 1px solid #1e293b;
+      border-radius: 5px;
+      padding: 4px 2px;
+    }
+
+    .table-cell.hdr {
+      background: #1e293b;
+      color: #94a3b8;
+      font-weight: 800;
+      font-size: 10px;
+    }
+
+    .table-cell.highlight-b {
+      border-color: #fbbf24;
+      color: #fbbf24;
+      font-weight: 800;
+    }
+
+    .table-cell.hit-point {
+      border-color: #34d399;
+      background: rgba(52, 211, 153, 0.14);
+      color: #6ee7b7;
+      font-weight: 800;
+    }
+
+    /* Scaffolding Toggles & Hint Section */
+    .toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+
+    .toggle-item input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #34d399;
+      cursor: pointer;
+    }
+
+    .sandbox-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .sandbox-action-btn {
+      padding: 7px 8px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .sandbox-action-btn:hover {
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    #hint-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      border-radius: 8px;
+      color: #fbbf24;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    #hint-btn:hover {
+      background: rgba(251, 191, 36, 0.22);
+    }
+
+    #hint-box {
+      margin-top: 8px;
+      padding: 9px 10px;
+      background: #090e1c;
+      border-left: 3px solid #fbbf24;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      display: none;
+    }
+
+    #hint-box.visible {
+      display: block;
+    }
+
+    /* Equation Shot Log */
+    #shot-log-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 95px;
+    }
+
+    #shot-log-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding-right: 2px;
+    }
+
+    .log-entry {
+      background: #090e1c;
+      border: 1px solid #1e293b;
+      border-radius: 7px;
+      padding: 5px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11.5px;
+    }
+
+    .log-eq {
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .log-res {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .log-res.hit { background: rgba(16, 185, 129, 0.16); color: #34d399; }
+    .log-res.combo { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+    .log-res.miss { background: rgba(148, 163, 184, 0.14); color: #94a3b8; }
+    .log-res.hazard { background: rgba(244, 63, 94, 0.18); color: #fb7185; }
+
+    @media (max-width: 880px) {
+      #workspace {
+        flex-direction: column;
+      }
+      #control-panel {
+        width: 100%;
+        min-width: 0;
+        height: 46%;
+        border-left: none;
+        border-top: 1px solid #1e293b;
+      }
+      .brand-sub, .tool-pills {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Top Header & Section 3.1 Sandbox Tools -->
+    <header id="top-bar">
+      <div class="brand">
+        <div class="brand-icon">3.1</div>
+        <div>
+          <div class="brand-title">SLOPE-INTERCEPT LASER DEFENSE</div>
+          <div class="brand-sub">Section 3.1 Interactive Sandbox (y = mx + b)</div>
+        </div>
+      </div>
+
+      <!-- Grid Click Mode Selector -->
+      <div class="tool-pills" id="grid-tool-pills" title="Choose what clicking on the coordinate grid does">
+        <button class="tool-pill active" data-tool="INSPECT">&#128269; Inspect / Aim</button>
+        <button class="tool-pill" data-tool="ADD_TARGET">+ Alien Drone</button>
+        <button class="tool-pill" data-tool="ADD_SATELLITE">+ Satellite</button>
+        <button class="tool-pill" data-tool="ERASE">&#10005; Erase</button>
+      </div>
+
+      <div class="hud-stats">
+        <div class="stat-chip">
+          <span class="lbl">Mode</span>
+          <span class="val emerald">3.1 SANDBOX</span>
+        </div>
+        <div class="stat-chip">
+          <span class="lbl">Targets Hit</span>
+          <span class="val cyan" id="hud-hits">0</span>
+        </div>
+        <button class="demo-launch-btn" id="btn-watch-demo" title="Launch Voice-Guided 6-Step Visual Tutorial">&#9654; Voice Demo</button>
+        <button class="icon-btn" id="btn-sound" title="Toggle Sound">SFX: ON</button>
+      </div>
+    </header>
+
+    <!-- Main Split Workspace -->
+    <div id="workspace">
+      <!-- Left: Interactive Cartesian Coordinate Plane -->
+      <div id="grid-stage">
+        <div id="mission-banner">
+          <span class="wave-tag">3.1 PRESET</span>
+          <select id="preset-select" aria-label="Choose Section 3.1 Practice Problem">
+            <option value="0">1. Identifying Slope &amp; Y-Intercept (Positive Slopes)</option>
+            <option value="1">2. Graphing Negative Slopes (Down &amp; Right)</option>
+            <option value="2">3. Fractional Slopes &amp; Rise/Run Triangles</option>
+            <option value="3">4. Zero Slope (Horizontal Lines y = b)</option>
+            <option value="4">5. Collinear Multi-Hit Line Challenge</option>
+            <option value="5">6. Satellite Obstacle Course (Negative Fractions)</option>
+            <option value="6">7. Blank Sandbox Canvas (Build Your Own Grid!)</option>
+          </select>
+          <button type="button" class="icon-btn" id="btn-reset-preset" style="padding:4px 8px;">&#8635; Reset</button>
+        </div>
+
+        <canvas id="gridCanvas"></canvas>
+
+        <!-- Interactive Voice-Guided Visual Demo Overlay HUD -->
+        <div id="demo-hud" role="region" aria-label="Interactive Tutorial Controls">
+          <div class="demo-hud-top">
+            <span class="demo-badge" id="demo-step-badge">DEMO MODE &mdash; STEP 1 OF 6</span>
+            <div class="demo-step-title" id="demo-step-title">Meet the Coordinate Plane &amp; Turret</div>
+            <button type="button" class="demo-voice-toggle" id="btn-demo-voice" title="Toggle Spoken Voice Narration">
+              <span class="voice-wave" aria-hidden="true"><span></span><span></span><span></span></span>
+              <span id="demo-voice-label">VOICE: ON</span>
+            </button>
+          </div>
+          <div class="demo-progress-track" id="demo-progress-track">
+            <div class="demo-prog-seg current"></div>
+            <div class="demo-prog-seg"></div>
+            <div class="demo-prog-seg"></div>
+            <div class="demo-prog-seg"></div>
+            <div class="demo-prog-seg"></div>
+            <div class="demo-prog-seg"></div>
+          </div>
+          <div id="demo-narration"></div>
+          <div class="demo-controls-row">
+            <div class="demo-nav-group">
+              <button type="button" class="demo-ctrl-btn" id="btn-demo-prev">&larr; Previous</button>
+              <button type="button" class="demo-ctrl-btn" id="btn-demo-replay">&#8635; Replay Step</button>
+              <button type="button" class="demo-ctrl-btn primary" id="btn-demo-next">Next Step &rarr;</button>
+            </div>
+            <button type="button" class="demo-ctrl-btn exit" id="btn-demo-exit">Exit Demo / Sandbox</button>
+          </div>
+        </div>
+
+        <div id="cursor-readout">
+          Hover Grid: <strong>(0, 0)</strong> &bull; Tool: <strong>Inspect / Aim</strong>
+        </div>
+      </div>
+
+      <!-- Right: Section 3.1 Equation & Sandbox Console -->
+      <aside id="control-panel">
+        <!-- 1. Equation Builder Card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">1. Slope-Intercept Form (y = mx + b)</span>
+            <span style="font-size: 11px; color: #64748b;">Press <strong>Enter</strong></span>
+          </div>
+
+          <div id="equation-display">
+            y = <span class="m-part">1</span>x + <span class="b-part">0</span>
+          </div>
+
+          <div class="input-row">
+            <!-- Slope (m) Input -->
+            <div class="field-box">
+              <div class="field-label slope-lbl">
+                <span>SLOPE (m)</span>
+                <button type="button" class="slope-mode-toggle" id="btn-slope-mode" title="Switch between Fraction (Rise/Run) and Decimal/Integer">
+                  Fraction
+                </button>
+              </div>
+
+              <div class="fraction-inputs" id="slope-fraction-group">
+                <input type="number" step="any" id="input-rise" class="num-input" value="1" aria-label="Slope Rise" />
+                <span class="frac-slash">/</span>
+                <input type="number" step="any" id="input-run" class="num-input" value="1" aria-label="Slope Run" />
+              </div>
+
+              <div class="fraction-inputs" id="slope-decimal-group" style="display: none;">
+                <input type="number" step="any" id="input-m-dec" class="num-input" value="1" aria-label="Slope m" />
+              </div>
+
+              <div class="helper-caption" id="slope-caption">Rise &Delta;y / Run &Delta;x</div>
+            </div>
+
+            <!-- Y-Intercept (b) Input -->
+            <div class="field-box">
+              <div class="field-label int-lbl">
+                <span>Y-INT (b)</span>
+                <span style="font-size: 10px; color: #94a3b8;">(0, b)</span>
+              </div>
+              <input type="number" step="any" id="input-b" class="num-input b-input" value="0" aria-label="Y-Intercept b" />
+              <div class="nudge-row">
+                <button type="button" class="nudge-btn" data-b-delta="-1">-1</button>
+                <button type="button" class="nudge-btn" data-b-set="0">0</button>
+                <button type="button" class="nudge-btn" data-b-delta="1">+1</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="fire-btn">&#9889; FIRE LASER BEAM</button>
+        </div>
+
+        <!-- 2. Section 3.1 Live (x, y) Value Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">2. Section 3.1 Ordered Pairs Table</span>
+            <span style="font-size: 10px; color: #34d399; font-weight: 700;">LIVE SOLUTIONS</span>
+          </div>
+          <div class="table-grid" id="xy-table-grid"></div>
+        </div>
+
+        <!-- 3. Visual Scaffolds, Sandbox Generator & Hints -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">3. Scaffolds &amp; Sandbox Builder</span>
+            <span style="font-size: 10px; color: #34d399; font-weight: 700;">UNLIMITED</span>
+          </div>
+
+          <div class="toggle-list">
+            <label class="toggle-item">
+              <span>Preview Targeting Sight (Dashed Line)</span>
+              <input type="checkbox" id="chk-preview-line" checked />
+            </label>
+            <label class="toggle-item">
+              <span>Show Rise / Run Step Triangle</span>
+              <input type="checkbox" id="chk-rise-run" checked />
+            </label>
+            <label class="toggle-item">
+              <span>Pin Target Coordinates on Grid</span>
+              <input type="checkbox" id="chk-show-coords" checked />
+            </label>
+          </div>
+
+          <div class="sandbox-btn-row">
+            <button type="button" class="sandbox-action-btn" id="btn-random-sandbox">&#127922; Random 3.1 Grid</button>
+            <button type="button" class="sandbox-action-btn" id="btn-clear-grid">&#128465; Clear All Targets</button>
+          </div>
+
+          <button type="button" id="hint-btn">&#128161; Step-by-Step 3.1 Algebra Hint</button>
+          <div id="hint-box"></div>
+        </div>
+
+        <!-- 4. Fired Equation Log -->
+        <div class="card" id="shot-log-card">
+          <div class="card-header">
+            <span class="card-title">4. Fired Equations Log</span>
+            <button type="button" id="btn-clear-log" style="background:none;border:none;color:#64748b;font-size:10px;cursor:pointer;">Clear</button>
+          </div>
+          <div id="shot-log-list">
+            <div style="font-size: 11.5px; color: #64748b; text-align: center; padding: 10px 4px;">
+              Click anywhere on the grid with <strong>+ Alien Drone</strong> to place custom targets, or fire equations above!
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * SECTION 3.1 SANDBOX - SLOPE-INTERCEPT LASER DEFENSE (y = mx + b)
+     * ============================================================================
+     */
+    (function () {
+      'use strict';
+
+      // --- Canvas & Grid Geometry ---
+      const canvas = document.getElementById('gridCanvas');
+      const ctx = canvas.getContext('2d');
+      const stageEl = document.getElementById('grid-stage');
+
+      const GRID_MIN = -10;
+      const GRID_MAX = 10;
+      const GRID_SPAN = GRID_MAX - GRID_MIN;
+
+      let canvasSize = 600;
+      let pad = 42;
+      let cellSize = (canvasSize - pad * 2) / GRID_SPAN;
+
+      function resizeGrid() {
+        const rect = stageEl.getBoundingClientRect();
+        const availW = rect.width - 24;
+        const availH = rect.height - 76;
+        canvasSize = Math.max(300, Math.floor(Math.min(availW, availH)));
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+        pad = Math.max(34, Math.floor(canvasSize * 0.068));
+        cellSize = (canvasSize - pad * 2) / GRID_SPAN;
+      }
+      window.addEventListener('resize', resizeGrid);
+
+      function toPixelX(x) {
+        return pad + (x - GRID_MIN) * cellSize;
+      }
+      function toPixelY(y) {
+        return pad + (GRID_MAX - y) * cellSize;
+      }
+      function toMathX(px) {
+        return GRID_MIN + (px - pad) / cellSize;
+      }
+      function toMathY(py) {
+        return GRID_MAX - (py - pad) / cellSize;
+      }
+
+      // --- DOM Elements ---
+      const hudHitsEl = document.getElementById('hud-hits');
+      const btnWatchDemo = document.getElementById('btn-watch-demo');
+      const btnSound = document.getElementById('btn-sound');
+      const presetSelect = document.getElementById('preset-select');
+      const btnResetPreset = document.getElementById('btn-reset-preset');
+      const cursorReadoutEl = document.getElementById('cursor-readout');
+
+      const demoHudEl = document.getElementById('demo-hud');
+      const demoStepBadgeEl = document.getElementById('demo-step-badge');
+      const demoStepTitleEl = document.getElementById('demo-step-title');
+      const demoProgressTrackEl = document.getElementById('demo-progress-track');
+      const demoNarrationEl = document.getElementById('demo-narration');
+      const btnDemoPrev = document.getElementById('btn-demo-prev');
+      const btnDemoReplay = document.getElementById('btn-demo-replay');
+      const btnDemoNext = document.getElementById('btn-demo-next');
+      const btnDemoExit = document.getElementById('btn-demo-exit');
+      const btnDemoVoice = document.getElementById('btn-demo-voice');
+      const demoVoiceLabelEl = document.getElementById('demo-voice-label');
+
+      const equationDisplayEl = document.getElementById('equation-display');
+      const btnSlopeMode = document.getElementById('btn-slope-mode');
+      const slopeFractionGroup = document.getElementById('slope-fraction-group');
+      const slopeDecimalGroup = document.getElementById('slope-decimal-group');
+      const inputRise = document.getElementById('input-rise');
+      const inputRun = document.getElementById('input-run');
+      const inputMDec = document.getElementById('input-m-dec');
+      const inputB = document.getElementById('input-b');
+      const slopeCaption = document.getElementById('slope-caption');
+      const fireBtn = document.getElementById('fire-btn');
+      const xyTableGrid = document.getElementById('xy-table-grid');
+
+      const chkPreviewLine = document.getElementById('chk-preview-line');
+      const chkRiseRun = document.getElementById('chk-rise-run');
+      const chkShowCoords = document.getElementById('chk-show-coords');
+      const btnRandomSandbox = document.getElementById('btn-random-sandbox');
+      const btnClearGrid = document.getElementById('btn-clear-grid');
+      const hintBtn = document.getElementById('hint-btn');
+      const hintBox = document.getElementById('hint-box');
+      const shotLogList = document.getElementById('shot-log-list');
+      const btnClearLog = document.getElementById('btn-clear-log');
+
+      // --- Web Audio API Sound Effects ---
+      class SoundFX {
+        constructor() {
+          this.ctx = null;
+          this.muted = false;
+        }
+        init() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+          }
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+        }
+        toggle() {
+          this.muted = !this.muted;
+          btnSound.textContent = this.muted ? 'SFX: OFF' : 'SFX: ON';
+        }
+        playLaser() {
+          if (this.muted || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(980, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.23);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.24);
+        }
+        playHit(comboCount = 1) {
+          if (this.muted || !this.ctx) return;
+          const baseFreq = 440 + comboCount * 110;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.18);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.21);
+        }
+        playHazard() {
+          if (this.muted || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(95, now + 0.28);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.31);
+        }
+        playWaveClear() {
+          if (this.muted || !this.ctx) return;
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+            const now = this.ctx.currentTime + i * 0.07;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.23);
+          });
+        }
+      }
+      const sfx = new SoundFX();
+
+      // --- Sandbox State ---
+      let totalHits = 0;
+      let slopeInputMode = 'FRACTION'; // 'FRACTION' | 'DECIMAL'
+      let gridTool = 'INSPECT'; // 'INSPECT' | 'ADD_TARGET' | 'ADD_SATELLITE' | 'ERASE'
+
+      let turretVisualB = 0;
+      let turretVisualAngle = -Math.PI / 4;
+
+      let targets = [];
+      let hazards = [];
+      let laserBeams = [];
+      let particles = [];
+      let floatingPopups = [];
+      let screenShake = 0;
+      let globalTime = 0;
+
+      let hoverCoord = null;
+      let selectedEntity = null;
+
+      // ========================================================================
+      // SECTION 3.1 CURRICULUM PRESETS
+      // ========================================================================
+      const PRESETS_3_1 = [
+        {
+          name: '1. Positive Slopes & Y-Intercepts',
+          targets: [
+            { x: 2, y: 7, type: 'drone', hp: 1 }, // y = 3x + 1
+            { x: 4, y: 6, type: 'drone', hp: 1 }, // y = 2x - 2
+            { x: -3, y: -1, type: 'drone', hp: 1 } // y = x + 2
+          ],
+          hazards: []
+        },
+        {
+          name: '2. Negative Slopes (Down & Right)',
+          targets: [
+            { x: 3, y: -1, type: 'drone', hp: 1 }, // y = -2x + 5
+            { x: 4, y: -6, type: 'drone', hp: 1 }, // y = -x - 2
+            { x: -2, y: 7, type: 'drone', hp: 1 }  // y = -3x + 1
+          ],
+          hazards: []
+        },
+        {
+          name: '3. Fractional Slopes & Rise/Run Triangles',
+          targets: [
+            { x: -3, y: -1, type: 'drone', hp: 1 },
+            { x: 6, y: 5, type: 'drone', hp: 1 }, // y = (2/3)x + 1
+            { x: 8, y: 0, type: 'drone', hp: 1 }  // y = (1/2)x - 4
+          ],
+          hazards: []
+        },
+        {
+          name: '4. Zero Slope (Horizontal Lines y = b)',
+          targets: [
+            { x: -6, y: 4, type: 'drone', hp: 1 },
+            { x: 5, y: 4, type: 'drone', hp: 1 },
+            { x: -4, y: -3, type: 'drone', hp: 1 },
+            { x: 7, y: -3, type: 'drone', hp: 1 }
+          ],
+          hazards: []
+        },
+        {
+          name: '5. Collinear Multi-Hit Line Challenge',
+          targets: [
+            { x: -4, y: -5, type: 'drone', hp: 1 },
+            { x: 2, y: 1, type: 'drone', hp: 1 },
+            { x: 6, y: 5, type: 'drone', hp: 1 },
+            { x: -2, y: 6, type: 'drone', hp: 1 }
+          ],
+          hazards: []
+        },
+        {
+          name: '6. Satellite Obstacle Course',
+          targets: [
+            { x: 4, y: 6, type: 'asteroid', hp: 1 },
+            { x: -6, y: -1, type: 'asteroid', hp: 1 },
+            { x: 5, y: -6, type: 'asteroid', hp: 1 }
+          ],
+          hazards: [
+            { x: 2, y: 4, label: 'SAT-1' },
+            { x: -3, y: 2, label: 'SAT-2' }
+          ]
+        },
+        {
+          name: '7. Blank Sandbox Canvas',
+          targets: [],
+          hazards: []
+        }
+      ];
+
+      function loadPreset(idx) {
+        const spec = PRESETS_3_1[idx] || PRESETS_3_1[0];
+        hintBox.classList.remove('visible');
+        hintBox.innerHTML = '';
+
+        targets = spec.targets.map((t, i) => ({
+          ...t,
+          id: `p-${idx}-${i}-${Date.now()}`,
+          maxHp: t.hp || 1,
+          pulse: Math.random() * Math.PI * 2
+        }));
+
+        hazards = spec.hazards.map((h, i) => ({
+          ...h,
+          id: `h-${idx}-${i}-${Date.now()}`,
+          pulse: Math.random() * Math.PI * 2
+        }));
+
+        selectedEntity = targets[0] || null;
+        updateOrderedPairsTable();
+      }
+
+      function generateRandomSandboxGrid() {
+        hintBox.classList.remove('visible');
+        const newTargets = [];
+        const used = new Set(['0,0']);
+
+        const slopes = [
+          [1, 1], [-1, 1], [2, 1], [-2, 1], [3, 1], [-3, 1],
+          [1, 2], [-1, 2], [2, 3], [-2, 3], [3, 4], [-3, 4], [0, 1]
+        ];
+        const [num, den] = slopes[Math.floor(Math.random() * slopes.length)];
+        const b = Math.floor(Math.random() * 11) - 5;
+
+        const pts = [];
+        for (let k = -4; k <= 4; k++) {
+          const x = k * den;
+          const y = k * num + b;
+          if (x !== 0 && Math.abs(x) <= 9 && Math.abs(y) <= 9) {
+            pts.push({ x, y });
+          }
+        }
+        pts.sort(() => Math.random() - 0.5);
+        pts.slice(0, 2).forEach((pt, idx) => {
+          used.add(`${pt.x},${pt.y}`);
+          newTargets.push({
+            id: `rnd-${Date.now()}-${idx}`,
+            x: pt.x,
+            y: pt.y,
+            type: 'drone',
+            hp: 1,
+            maxHp: 1,
+            pulse: idx
+          });
+        });
+
+        let guard = 0;
+        while (newTargets.length < 4 && guard < 80) {
+          guard++;
+          const rx = Math.floor(Math.random() * 17) - 8;
+          const ry = Math.floor(Math.random() * 17) - 8;
+          const key = `${rx},${ry}`;
+          if (rx !== 0 && !used.has(key)) {
+            used.add(key);
+            newTargets.push({
+              id: `rnd-${Date.now()}-${newTargets.length}`,
+              x: rx,
+              y: ry,
+              type: 'drone',
+              hp: 1,
+              maxHp: 1,
+              pulse: newTargets.length
+            });
+          }
+        }
+
+        targets = newTargets;
+        hazards = [];
+        selectedEntity = targets[0] || null;
+        updateOrderedPairsTable();
+        addPopup(0, 0, 'NEW 3.1 SANDBOX GRID!', '#34d399');
+      }
+
+      // ========================================================================
+      // INTERACTIVE 6-STEP VISUAL DEMO WITH VOICE OVERLAY
+      // ========================================================================
+      let isDemoMode = false;
+      let demoStepIndex = 0;
+      let demoTimers = [];
+      let savedSandboxSnapshot = null;
+
+      let demoVoiceEnabled = true;
+      let isVoiceSpeaking = false;
+      let demoTimerElapsed = false;
+      let activeUtterance = null;
+
+      function stopVoiceNarration() {
+        isVoiceSpeaking = false;
+        activeUtterance = null;
+        if (btnDemoVoice) btnDemoVoice.classList.remove('speaking');
+        if ('speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+          } catch (e) {}
+        }
+      }
+
+      function pickPreferredVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        return (
+          voices.find((v) => /en(-|_)US/i.test(v.lang) && /(Google|Natural|Samantha|Ava|Aria|Jenny|Microsoft)/i.test(v.name)) ||
+          voices.find((v) => /^en/i.test(v.lang)) ||
+          voices[0] ||
+          null
+        );
+      }
+
+      if ('speechSynthesis' in window && typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+        window.speechSynthesis.onvoiceschanged = () => {
+          pickPreferredVoice();
+        };
+      }
+
+      function maybeAutoAdvanceDemoStep() {
+        if (!isDemoMode) return;
+        const autoMs = DEMO_STEPS[demoStepIndex].autoAdvanceMs;
+        if (!autoMs) return;
+        if (demoTimerElapsed && !isVoiceSpeaking && demoStepIndex < DEMO_STEPS.length - 1) {
+          runDemoStep(demoStepIndex + 1);
+        }
+      }
+
+      function speakDemoText(plainSpeechText) {
+        stopVoiceNarration();
+        if (!demoVoiceEnabled || !('speechSynthesis' in window) || !plainSpeechText) {
+          return;
+        }
+        try {
+          const utter = new SpeechSynthesisUtterance(plainSpeechText);
+          const chosenVoice = pickPreferredVoice();
+          if (chosenVoice) utter.voice = chosenVoice;
+          utter.rate = 1.0;
+          utter.pitch = 1.03;
+          utter.volume = 1.0;
+
+          utter.onstart = () => {
+            isVoiceSpeaking = true;
+            if (btnDemoVoice) btnDemoVoice.classList.add('speaking');
+          };
+          utter.onend = () => {
+            if (activeUtterance === utter) {
+              isVoiceSpeaking = false;
+              if (btnDemoVoice) btnDemoVoice.classList.remove('speaking');
+              maybeAutoAdvanceDemoStep();
+            }
+          };
+          utter.onerror = () => {
+            if (activeUtterance === utter) {
+              isVoiceSpeaking = false;
+              if (btnDemoVoice) btnDemoVoice.classList.remove('speaking');
+              maybeAutoAdvanceDemoStep();
+            }
+          };
+
+          activeUtterance = utter;
+          window.speechSynthesis.speak(utter);
+        } catch (e) {
+          isVoiceSpeaking = false;
+        }
+      }
+
+      function toggleDemoVoice() {
+        demoVoiceEnabled = !demoVoiceEnabled;
+        if (demoVoiceEnabled) {
+          btnDemoVoice.classList.remove('muted');
+          demoVoiceLabelEl.textContent = 'VOICE: ON';
+          if (isDemoMode) {
+            speakDemoText(DEMO_STEPS[demoStepIndex].speech);
+          }
+        } else {
+          btnDemoVoice.classList.add('muted');
+          demoVoiceLabelEl.textContent = 'VOICE: OFF';
+          stopVoiceNarration();
+          maybeAutoAdvanceDemoStep();
+        }
+      }
+
+      let demoVisuals = {
+        spotlights: [],
+        staircaseSteps: [],
+        pointerBadge: null,
+        step6Solved: false
+      };
+
+      const DEMO_STEPS = [
+        {
+          title: 'Meet the Coordinate Plane & Turret',
+          narration:
+            'Welcome to the Section 3.1 Sandbox! Your laser turret sits along the vertical <strong>y-axis (x = 0)</strong> and slides up or down as you change the y-intercept <em>b</em>.',
+          speech:
+            'Welcome to the Section three point one Sandbox! Your laser turret sits along the vertical y-axis, and slides up or down as you change the y-intercept, b.',
+          autoAdvanceMs: 6800
+        },
+        {
+          title: 'Setting the Y-Intercept (b)',
+          narration:
+            'In <strong>y = mx + b</strong>, <em>b</em> is where your line crosses the y-axis at <strong>(0, b)</strong>. Watch as we set <em>b = 2</em> to anchor our turret at <strong>(0, 2)</strong>!',
+          speech:
+            'In y equals m x plus b, b is where your line crosses the y-axis at zero, b. Watch as we set b equal to two, anchoring our turret at zero, two.',
+          autoAdvanceMs: 6200
+        },
+        {
+          title: 'Aiming with Slope (m = Rise / Run)',
+          narration:
+            'From <strong>(0, 2)</strong>, count <em>Rise = +1</em> (up 1) and <em>Run = +2</em> (right 2) to reach <strong>(2, 3)</strong>. Repeating that <strong>1/2</strong> staircase steps through <strong>(4, 4)</strong> and <strong>(6, 5)</strong>!',
+          speech:
+            'From zero, two, count a rise of positive one up, and a run of positive two right, to reach two, three. Repeating that one-half slope staircase steps straight through four, four, and six, five!',
+          autoAdvanceMs: 7200
+        },
+        {
+          title: 'Firing & Collinear Points',
+          narration:
+            'Because <strong>(2, 3)</strong>, <strong>(4, 4)</strong>, and <strong>(6, 5)</strong> all satisfy <strong>y = 1/2x + 2</strong>, firing one laser beam slices all three targets at once!',
+          speech:
+            'Because two, three, four, four, and six, five all satisfy y equals one-half x plus two, firing one laser beam slices all three targets at once!',
+          autoAdvanceMs: 6800
+        },
+        {
+          title: 'Negative Slopes & Avoiding Satellites',
+          narration:
+            'To aim downward from <strong>(0, 3)</strong> and avoid the blue <strong>Civilian Satellite</strong> at <strong>(0, 1)</strong>, we use a negative slope <strong>m = -2/3</strong> (Down 2, Right 3).',
+          speech:
+            'To aim downward from zero, three and avoid the blue civilian satellite at zero, one, we use a negative slope of negative two-thirds: down two, right three.',
+          autoAdvanceMs: 8200
+        },
+        {
+          title: 'Your Turn! Interactive 3.1 Try-It',
+          narration:
+            'Now you try! Aim through <strong>(0, -1)</strong> and <strong>(3, 5)</strong>. Set <em>b = -1</em>, <em>Rise = 2</em>, and <em>Run = 1</em> (<strong>y = 2x - 1</strong>), then click <strong>FIRE LASER BEAM</strong>!',
+          speech:
+            'Now it is your turn! Aim through zero, negative one, and three, five. Set b to negative one, rise to two, and run to one, then click Fire Laser Beam!',
+          autoAdvanceMs: null
+        }
+      ];
+
+      function clearDemoTimers() {
+        demoTimers.forEach((id) => clearTimeout(id));
+        demoTimers = [];
+        clearDemoInputHighlights();
+      }
+
+      function scheduleDemo(fn, delayMs) {
+        const id = setTimeout(() => {
+          if (isDemoMode) fn();
+        }, delayMs);
+        demoTimers.push(id);
+        return id;
+      }
+
+      function clearDemoInputHighlights() {
+        [inputRise, inputRun, inputMDec, inputB].forEach((el) => {
+          el.classList.remove('demo-input-highlight');
+        });
+        fireBtn.classList.remove('demo-fire-pulse');
+      }
+
+      function animateInputTyping(inputEl, finalValue, highlight = true) {
+        if (highlight) {
+          clearDemoInputHighlights();
+          inputEl.classList.add('demo-input-highlight');
+        }
+        inputEl.value = finalValue;
+        updateEquationPreview();
+        sfx.init();
+      }
+
+      function ensureFractionSlopeMode() {
+        if (slopeInputMode !== 'FRACTION') {
+          slopeInputMode = 'FRACTION';
+          btnSlopeMode.textContent = 'Fraction';
+          slopeDecimalGroup.style.display = 'none';
+          slopeFractionGroup.style.display = 'flex';
+        }
+      }
+
+      function setDemoInputsLocked(locked) {
+        [inputRise, inputRun, inputMDec, inputB, btnSlopeMode, fireBtn].forEach((el) => {
+          el.disabled = locked;
+        });
+        document.querySelectorAll('[data-b-delta], [data-b-set]').forEach((btn) => {
+          btn.disabled = locked;
+        });
+      }
+
+      function updateDemoHudChrome() {
+        const total = DEMO_STEPS.length;
+        const step = DEMO_STEPS[demoStepIndex];
+        demoStepBadgeEl.innerHTML = `DEMO MODE &mdash; STEP ${demoStepIndex + 1} OF ${total}`;
+        demoStepTitleEl.textContent = step.title;
+        demoNarrationEl.innerHTML = step.narration;
+
+        const segs = demoProgressTrackEl.querySelectorAll('.demo-prog-seg');
+        segs.forEach((seg, idx) => {
+          seg.classList.remove('done', 'current');
+          if (idx < demoStepIndex) seg.classList.add('done');
+          else if (idx === demoStepIndex) seg.classList.add('current');
+        });
+
+        btnDemoPrev.disabled = demoStepIndex === 0;
+        btnDemoNext.textContent = demoStepIndex === total - 1 ? 'Finish Demo' : 'Next Step \u2192';
+      }
+
+      function runDemoStep(index) {
+        clearDemoTimers();
+        demoStepIndex = Math.max(0, Math.min(DEMO_STEPS.length - 1, index));
+        demoTimerElapsed = false;
+        updateDemoHudChrome();
+        speakDemoText(DEMO_STEPS[demoStepIndex].speech);
+
+        laserBeams = [];
+        particles = [];
+        floatingPopups = [];
+        demoVisuals = {
+          spotlights: [],
+          staircaseSteps: [],
+          pointerBadge: null,
+          step6Solved: false
+        };
+
+        chkPreviewLine.checked = true;
+        chkRiseRun.checked = true;
+        chkShowCoords.checked = true;
+
+        ensureFractionSlopeMode();
+        const isInteractiveStep = demoStepIndex === 5;
+        setDemoInputsLocked(!isInteractiveStep);
+
+        if (demoStepIndex === 0) {
+          targets = [
+            { id: 'd1-1', x: 4, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd1-2', x: -5, y: -3, type: 'drone', hp: 1, maxHp: 1, pulse: 1.5 }
+          ];
+          hazards = [];
+          selectedEntity = targets[0];
+          inputRise.value = 0;
+          inputRun.value = 1;
+          inputB.value = 0;
+          updateEquationPreview();
+
+          demoVisuals.spotlights = [
+            { x: 0, y: 0, color: '#fbbf24', label: 'Origin (0, 0)' },
+            { x: 4, y: 5, color: '#38bdf8', label: 'Target (4, 5)' }
+          ];
+          demoVisuals.pointerBadge = {
+            x: 0,
+            y: 0,
+            text: 'Turret slides along y-axis (x = 0)',
+            color: '#fbbf24'
+          };
+
+          [3, -2, 4, 0].forEach((bVal, i) => {
+            scheduleDemo(() => {
+              animateInputTyping(inputB, bVal, true);
+              demoVisuals.pointerBadge = {
+                x: 0,
+                y: bVal,
+                text: `y-intercept b = ${bVal} \u2192 (0, ${bVal})`,
+                color: '#fbbf24'
+              };
+            }, 1100 * (i + 1));
+          });
+        } else if (demoStepIndex === 1) {
+          targets = [
+            { id: 'd2-1', x: 2, y: 3, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd2-2', x: 4, y: 4, type: 'drone', hp: 1, maxHp: 1, pulse: 0.7 },
+            { id: 'd2-3', x: 6, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 1.4 }
+          ];
+          hazards = [];
+          selectedEntity = targets[0];
+          inputRise.value = 0;
+          inputRun.value = 1;
+          inputB.value = -3;
+          updateEquationPreview();
+
+          demoVisuals.spotlights = [
+            { x: 0, y: 2, color: '#fbbf24', label: 'Anchor (0, 2)' },
+            { x: 2, y: 3, color: '#38bdf8', label: 'Target (2, 3)' }
+          ];
+
+          scheduleDemo(() => {
+            animateInputTyping(inputB, 2, true);
+            addPopup(0, 2, 'b = 2 SET! (0, 2)', '#fbbf24');
+            demoVisuals.pointerBadge = {
+              x: 0,
+              y: 2,
+              text: 'Turret anchored at (0, 2)!',
+              color: '#fbbf24'
+            };
+          }, 1300);
+        } else if (demoStepIndex === 2) {
+          targets = [
+            { id: 'd3-1', x: 2, y: 3, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd3-2', x: 4, y: 4, type: 'drone', hp: 1, maxHp: 1, pulse: 0.7 },
+            { id: 'd3-3', x: 6, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 1.4 }
+          ];
+          hazards = [];
+          selectedEntity = targets[0];
+          inputB.value = 2;
+          inputRise.value = 0;
+          inputRun.value = 1;
+          updateEquationPreview();
+
+          demoVisuals.spotlights = [{ x: 0, y: 2, color: '#fbbf24', label: '(0, 2)' }];
+
+          scheduleDemo(() => {
+            animateInputTyping(inputRise, 1, true);
+            addPopup(0, 3, 'RISE = +1 (UP)', '#fbbf24');
+          }, 900);
+
+          scheduleDemo(() => {
+            animateInputTyping(inputRun, 2, true);
+            addPopup(2, 3, 'RUN = +2 (RIGHT)', '#34d399');
+            demoVisuals.staircaseSteps = [{ x0: 0, y0: 2, rise: 1, run: 2 }];
+          }, 2100);
+
+          scheduleDemo(() => {
+            demoVisuals.staircaseSteps.push({ x0: 2, y0: 3, rise: 1, run: 2 });
+            demoVisuals.spotlights.push({ x: 4, y: 4, color: '#34d399', label: '(4, 4)' });
+          }, 3400);
+
+          scheduleDemo(() => {
+            demoVisuals.staircaseSteps.push({ x0: 4, y0: 4, rise: 1, run: 2 });
+            demoVisuals.spotlights.push({ x: 6, y: 5, color: '#34d399', label: '(6, 5)' });
+            demoVisuals.pointerBadge = {
+              x: 4,
+              y: 4,
+              text: 'All 3 targets align on y = 1/2x + 2!',
+              color: '#34d399'
+            };
+          }, 4600);
+        } else if (demoStepIndex === 3) {
+          targets = [
+            { id: 'd4-1', x: 2, y: 3, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd4-2', x: 4, y: 4, type: 'drone', hp: 1, maxHp: 1, pulse: 0.7 },
+            { id: 'd4-3', x: 6, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 1.4 }
+          ];
+          hazards = [];
+          selectedEntity = null;
+          inputB.value = 2;
+          inputRise.value = 1;
+          inputRun.value = 2;
+          updateEquationPreview();
+          demoVisuals.staircaseSteps = [
+            { x0: 0, y0: 2, rise: 1, run: 2 },
+            { x0: 2, y0: 3, rise: 1, run: 2 },
+            { x0: 4, y0: 4, rise: 1, run: 2 }
+          ];
+
+          scheduleDemo(() => {
+            fireBtn.classList.add('demo-fire-pulse');
+          }, 700);
+
+          scheduleDemo(() => {
+            fireBtn.classList.remove('demo-fire-pulse');
+            executeDemoLaserShot(0.5, 2, 'y = 1/2x + 2', '3x COLLINEAR HIT!');
+          }, 1900);
+        } else if (demoStepIndex === 4) {
+          targets = [
+            { id: 'd5-1', x: -3, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd5-2', x: 3, y: 1, type: 'drone', hp: 1, maxHp: 1, pulse: 1.0 }
+          ];
+          hazards = [{ id: 'dh-1', x: 0, y: 1, label: 'SAT-1', pulse: 0 }];
+          selectedEntity = targets[1];
+
+          inputB.value = 1;
+          inputRise.value = 0;
+          inputRun.value = 1;
+          updateEquationPreview();
+
+          demoVisuals.spotlights = [
+            { x: 0, y: 1, color: '#60a5fa', label: 'Satellite at (0, 1) - AVOID!' }
+          ];
+          demoVisuals.pointerBadge = {
+            x: 0,
+            y: 1,
+            text: 'Satellite blocks b = 1! Move turret to b = 3',
+            color: '#60a5fa'
+          };
+
+          scheduleDemo(() => {
+            animateInputTyping(inputB, 3, true);
+            demoVisuals.spotlights = [
+              { x: 0, y: 3, color: '#fbbf24', label: 'Safe Anchor (0, 3)' },
+              { x: 0, y: 1, color: '#60a5fa', label: 'Satellite (0, 1)' }
+            ];
+            demoVisuals.pointerBadge = {
+              x: 0,
+              y: 3,
+              text: 'Turret at (0, 3) clears the satellite!',
+              color: '#fbbf24'
+            };
+          }, 1600);
+
+          scheduleDemo(() => {
+            animateInputTyping(inputRise, -2, true);
+            addPopup(0, 2, 'RISE = -2 (DOWN)', '#fbbf24');
+          }, 3000);
+
+          scheduleDemo(() => {
+            animateInputTyping(inputRun, 3, true);
+            demoVisuals.staircaseSteps = [
+              { x0: -3, y0: 5, rise: -2, run: 3 },
+              { x0: 0, y0: 3, rise: -2, run: 3 }
+            ];
+            demoVisuals.pointerBadge = {
+              x: 3,
+              y: 1,
+              text: 'Negative slope m = -2/3 steps down & right!',
+              color: '#34d399'
+            };
+          }, 4300);
+
+          scheduleDemo(() => {
+            clearDemoInputHighlights();
+            executeDemoLaserShot(-2 / 3, 3, 'y = -2/3x + 3', '2x SAFE HIT!');
+          }, 6000);
+        } else if (demoStepIndex === 5) {
+          targets = [
+            { id: 'd6-1', x: 0, y: -1, type: 'drone', hp: 1, maxHp: 1, pulse: 0 },
+            { id: 'd6-2', x: 3, y: 5, type: 'drone', hp: 1, maxHp: 1, pulse: 0.9 }
+          ];
+          hazards = [];
+          selectedEntity = targets[1];
+
+          inputB.value = 0;
+          inputRise.value = 1;
+          inputRun.value = 1;
+          updateEquationPreview();
+
+          inputB.classList.add('demo-input-highlight');
+          inputRise.classList.add('demo-input-highlight');
+          fireBtn.classList.add('demo-fire-pulse');
+
+          demoVisuals.spotlights = [
+            { x: 0, y: -1, color: '#fbbf24', label: 'Target 1: (0, -1) \u2192 b = -1' },
+            { x: 3, y: 5, color: '#38bdf8', label: 'Target 2: (3, 5)' }
+          ];
+          demoVisuals.pointerBadge = {
+            x: 3,
+            y: 5,
+            text: 'Enter b = -1, Rise = 2, Run = 1 & Click FIRE!',
+            color: '#fbbf24'
+          };
+        }
+
+        const autoMs = DEMO_STEPS[demoStepIndex].autoAdvanceMs;
+        if (autoMs) {
+          scheduleDemo(() => {
+            demoTimerElapsed = true;
+            maybeAutoAdvanceDemoStep();
+          }, autoMs);
+        }
+      }
+
+      function executeDemoLaserShot(m, b, eqPlain, bannerPopupText) {
+        sfx.init();
+        sfx.playLaser();
+        screenShake = 9;
+        turretVisualB = b;
+
+        const endpoints = computeLineEndpoints(m, b);
+        laserBeams.push({
+          ...endpoints,
+          life: 0.85,
+          color: '#fbbf24'
+        });
+
+        const hitTargets = targets.filter(
+          (t) => pointToLineVerticalDistance(t.x, t.y, m, b) <= 0.38
+        );
+
+        if (hitTargets.length > 0) {
+          sfx.playHit(hitTargets.length);
+          hitTargets.forEach((t, idx) => {
+            spawnExplosion(t.x, t.y, '#fbbf24', 28);
+            if (idx === Math.floor(hitTargets.length / 2)) {
+              addPopup(t.x, t.y, bannerPopupText, '#fbbf24');
+            }
+          });
+          targets = targets.filter((t) => !hitTargets.includes(t));
+          appendShotLog(eqPlain, `DEMO ${hitTargets.length}x HIT`, 'combo');
+        }
+      }
+
+      function handleInteractiveDemoFire() {
+        sfx.init();
+        const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
+        if (!valid) {
+          addPopup(0, 0, 'INVALID EQUATION!', '#fb7185');
+          return;
+        }
+
+        const eqPlain = formatEquationPlain(m, b, rise, run);
+        const endpoints = computeLineEndpoints(m, b);
+        turretVisualB = Math.max(-10, Math.min(10, b));
+        sfx.playLaser();
+        screenShake = 8;
+
+        const hitList = targets.filter(
+          (t) => pointToLineVerticalDistance(t.x, t.y, m, b) <= 0.36
+        );
+
+        laserBeams.push({
+          ...endpoints,
+          life: 0.75,
+          color: hitList.length >= 2 ? '#34d399' : '#38bdf8'
+        });
+
+        if (hitList.length > 0) {
+          sfx.playHit(hitList.length);
+          hitList.forEach((t) => {
+            spawnExplosion(t.x, t.y, '#34d399', 26);
+            addPopup(t.x, t.y, 'DIRECT HIT!', '#34d399');
+          });
+          targets = targets.filter((t) => !hitList.includes(t));
+          appendShotLog(eqPlain, `TRY-IT ${hitList.length}x HIT`, 'combo');
+        } else {
+          appendShotLog(eqPlain, 'TRY AGAIN', 'miss');
+          addPopup(0, Math.max(-9, Math.min(9, b)), 'TRY b = -1, Rise = 2, Run = 1', '#fbbf24');
+        }
+
+        if (targets.length === 0 && !demoVisuals.step6Solved) {
+          demoVisuals.step6Solved = true;
+          clearDemoInputHighlights();
+          sfx.playWaveClear();
+
+          [
+            [-4, 4],
+            [0, 6],
+            [4, 4],
+            [0, -1],
+            [3, 5]
+          ].forEach(([cx, cy]) => spawnExplosion(cx, cy, '#34d399', 24));
+
+          addPopup(1.5, 2.5, 'AWESOME! YOU MASTERED y = mx + b!', '#34d399');
+          demoVisuals.spotlights = [];
+          demoVisuals.pointerBadge = {
+            x: 1.5,
+            y: 2,
+            text: 'Challenge Complete! Click "Return to 3.1 Sandbox"!',
+            color: '#34d399'
+          };
+          demoNarrationEl.innerHTML =
+            '<strong>Fantastic work!</strong> You aimed with <strong>y = 2x - 1</strong> (<em>y-intercept -1</em>, <em>slope 2/1</em>) and cleared every target. Ready to explore the Section 3.1 Sandbox?';
+          speakDemoText(
+            'Fantastic work! You aimed with y equals two x minus one and cleared every target. Click Return to three point one Sandbox whenever you are ready!'
+          );
+          btnDemoExit.textContent = '\u26A1 Return to 3.1 Sandbox';
+        }
+      }
+
+      function startDemoMode() {
+        sfx.init();
+        if (!isDemoMode) {
+          savedSandboxSnapshot = {
+            presetIndex: presetSelect.value,
+            targets: JSON.parse(JSON.stringify(targets)),
+            hazards: JSON.parse(JSON.stringify(hazards)),
+            inputRise: inputRise.value,
+            inputRun: inputRun.value,
+            inputMDec: inputMDec.value,
+            inputB: inputB.value,
+            slopeInputMode
+          };
+        }
+
+        isDemoMode = true;
+        demoHudEl.classList.add('visible');
+        btnWatchDemo.classList.add('active');
+        btnWatchDemo.innerHTML = '&#9632; Exit Demo';
+        btnDemoExit.textContent = 'Exit Demo / Sandbox';
+
+        runDemoStep(0);
+      }
+
+      function exitDemoMode() {
+        clearDemoTimers();
+        stopVoiceNarration();
+        isDemoMode = false;
+        demoHudEl.classList.remove('visible');
+        btnWatchDemo.classList.remove('active');
+        btnWatchDemo.innerHTML = '&#9654; Voice Demo';
+        setDemoInputsLocked(false);
+
+        demoVisuals = {
+          spotlights: [],
+          staircaseSteps: [],
+          pointerBadge: null,
+          step6Solved: false
+        };
+
+        if (savedSandboxSnapshot) {
+          const snap = savedSandboxSnapshot;
+          presetSelect.value = snap.presetIndex;
+          targets = snap.targets;
+          hazards = snap.hazards;
+          slopeInputMode = snap.slopeInputMode;
+          btnSlopeMode.textContent = slopeInputMode === 'FRACTION' ? 'Fraction' : 'Decimal';
+          slopeFractionGroup.style.display = slopeInputMode === 'FRACTION' ? 'flex' : 'none';
+          slopeDecimalGroup.style.display = slopeInputMode === 'FRACTION' ? 'none' : 'flex';
+          inputRise.value = snap.inputRise;
+          inputRun.value = snap.inputRun;
+          inputMDec.value = snap.inputMDec;
+          inputB.value = snap.inputB;
+          savedSandboxSnapshot = null;
+          updateEquationPreview();
+        } else {
+          loadPreset(parseInt(presetSelect.value, 10) || 0);
+        }
+      }
+
+      // ========================================================================
+      // ALGEBRA HELPERS & SECTION 3.1 LIVE ORDERED PAIRS TABLE
+      // ========================================================================
+      function gcd(a, b) {
+        a = Math.abs(Math.round(a));
+        b = Math.abs(Math.round(b));
+        while (b !== 0) {
+          const t = b;
+          b = a % b;
+          a = t;
+        }
+        return a || 1;
+      }
+
+      function getCurrentSlopeAndIntercept() {
+        let m = 0;
+        let rise = 0;
+        let run = 1;
+        let valid = true;
+
+        if (slopeInputMode === 'FRACTION') {
+          rise = parseFloat(inputRise.value);
+          run = parseFloat(inputRun.value);
+          if (isNaN(rise) || isNaN(run) || run === 0) {
+            valid = false;
+          } else {
+            m = rise / run;
+          }
+        } else {
+          m = parseFloat(inputMDec.value);
+          if (isNaN(m)) {
+            valid = false;
+          } else {
+            rise = m;
+            run = 1;
+          }
+        }
+
+        let b = parseFloat(inputB.value);
+        if (isNaN(b)) {
+          valid = false;
+          b = 0;
+        }
+
+        return { m, b, rise, run, valid };
+      }
+
+      function formatEquationHTML(m, b, rise, run) {
+        if (!isFinite(m) || isNaN(m) || isNaN(b)) {
+          return `<span style="color:#fb7185;">Undefined / Invalid Input</span>`;
+        }
+
+        let mStr = '';
+        if (Math.abs(m) < 1e-9) {
+          mStr = '';
+        } else if (slopeInputMode === 'FRACTION' && Number.isInteger(rise) && Number.isInteger(run) && run !== 0) {
+          let num = rise;
+          let den = run;
+          if (den < 0) {
+            num = -num;
+            den = -den;
+          }
+          const divisor = gcd(num, den);
+          num /= divisor;
+          den /= divisor;
+
+          if (den === 1) {
+            if (num === 1) mStr = `<span class="m-part"></span>x`;
+            else if (num === -1) mStr = `<span class="m-part">-</span>x`;
+            else mStr = `<span class="m-part">${num}</span>x`;
+          } else {
+            const sign = num < 0 ? '-' : '';
+            mStr = `<span class="m-part">${sign}${Math.abs(num)}/${den}</span>x`;
+          }
+        } else {
+          const roundedM = Math.round(m * 1000) / 1000;
+          if (roundedM === 1) mStr = `<span class="m-part"></span>x`;
+          else if (roundedM === -1) mStr = `<span class="m-part">-</span>x`;
+          else mStr = `<span class="m-part">${roundedM}</span>x`;
+        }
+
+        const roundedB = Math.round(b * 1000) / 1000;
+
+        if (mStr === '') {
+          return `y = <span class="b-part">${roundedB}</span>`;
+        }
+        if (roundedB === 0) {
+          return `y = ${mStr}`;
+        }
+        if (roundedB > 0) {
+          return `y = ${mStr} + <span class="b-part">${roundedB}</span>`;
+        }
+        return `y = ${mStr} - <span class="b-part">${Math.abs(roundedB)}</span>`;
+      }
+
+      function formatEquationPlain(m, b, rise, run) {
+        const div = document.createElement('div');
+        div.innerHTML = formatEquationHTML(m, b, rise, run);
+        return div.textContent || `y = ${m}x + ${b}`;
+      }
+
+      function updateOrderedPairsTable() {
+        const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
+        if (!valid) {
+          xyTableGrid.innerHTML = '';
+          return;
+        }
+
+        // Pick 4 clean integer x-values centered around 0 (using denominator step if integer fraction)
+        let stepX = 1;
+        if (slopeInputMode === 'FRACTION' && Number.isInteger(run) && Math.abs(run) >= 1 && Math.abs(run) <= 5) {
+          stepX = Math.abs(run);
+        }
+        const sampleXs = [-stepX, 0, stepX, stepX * 2];
+
+        let html = `<div class="table-cell hdr">x</div>`;
+        sampleXs.forEach((xv) => {
+          const isZero = xv === 0;
+          html += `<div class="table-cell ${isZero ? 'highlight-b' : ''}">${xv}</div>`;
+        });
+
+        html += `<div class="table-cell hdr">y</div>`;
+        sampleXs.forEach((xv) => {
+          const yv = Math.round((m * xv + b) * 100) / 100;
+          const isZero = xv === 0;
+          const hitsTarget = targets.some((t) => Math.abs(t.x - xv) < 0.01 && Math.abs(t.y - yv) < 0.01);
+          html += `<div class="table-cell ${hitsTarget ? 'hit-point' : isZero ? 'highlight-b' : ''}">${yv}</div>`;
+        });
+
+        xyTableGrid.innerHTML = html;
+      }
+
+      function updateEquationPreview() {
+        const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
+        equationDisplayEl.innerHTML = valid
+          ? formatEquationHTML(m, b, rise, run)
+          : `<span style="color:#fb7185;">Check Slope / Run &ne; 0</span>`;
+
+        if (slopeInputMode === 'FRACTION' && valid && run !== 0) {
+          const dec = Math.round((rise / run) * 1000) / 1000;
+          slopeCaption.textContent = `Rise ${rise} / Run ${run}  (= ${dec})`;
+        } else {
+          slopeCaption.textContent = 'Decimal / Integer Slope m';
+        }
+
+        updateOrderedPairsTable();
+      }
+
+      // ========================================================================
+      // STEP-BY-STEP 3.1 ALGEBRA HINT GENERATOR
+      // ========================================================================
+      function generateAlgebraHint() {
+        if (targets.length === 0) {
+          hintBox.innerHTML =
+            '<strong>Sandbox Tip:</strong> Select <strong>+ Alien Drone</strong> in the top bar and click any lattice point on the grid to place a target!';
+          hintBox.classList.add('visible');
+          return;
+        }
+
+        // Check for a collinear pair first
+        let pairFound = null;
+        for (let i = 0; i < targets.length; i++) {
+          for (let j = i + 1; j < targets.length; j++) {
+            const t1 = targets[i];
+            const t2 = targets[j];
+            if (t1.x === t2.x) continue;
+            const dy = t2.y - t1.y;
+            const dx = t2.x - t1.x;
+            const m = dy / dx;
+            const b = t1.y - m * t1.x;
+            if (Math.abs(b - Math.round(b)) < 1e-6 && Math.abs(b) <= 10) {
+              const hitsHazard = hazards.some((h) => Math.abs(h.y - (m * h.x + b)) < 0.05);
+              if (!hitsHazard) {
+                pairFound = { t1, t2, dy, dx, b: Math.round(b) };
+                break;
+              }
+            }
+          }
+          if (pairFound) break;
+        }
+
+        if (pairFound) {
+          const { t1, t2, dy, dx, b } = pairFound;
+          const div = gcd(dy, dx);
+          let rNum = dy / div;
+          let rDen = dx / div;
+          if (rDen < 0) {
+            rNum = -rNum;
+            rDen = -rDen;
+          }
+          const mLabel = rDen === 1 ? `${rNum}` : `${rNum}/${rDen}`;
+          hintBox.innerHTML = `
+            <strong>3.1 Collinear Line Solution:</strong><br/>
+            1. Points <strong>(${t1.x}, ${t1.y})</strong> and <strong>(${t2.x}, ${t2.y})</strong> lie on the same line.<br/>
+            2. Slope <strong>m</strong> = (y₂ - y₁)/(x₂ - x₁) = (${t2.y} - ${t1.y})/(${t2.x} - ${t1.x}) = <strong>${mLabel}</strong>.<br/>
+            3. Y-intercept <strong>b</strong> = y - mx = ${t1.y} - (${mLabel})(${t1.x}) = <strong>${b}</strong>.
+          `;
+        } else {
+          const t = selectedEntity && targets.includes(selectedEntity) ? selectedEntity : targets[0];
+          if (t.x === 0) {
+            hintBox.innerHTML = `
+              <strong>Target on Y-Axis (${t.x}, ${t.y}):</strong><br/>
+              Set y-intercept <strong>b = ${t.y}</strong> and any slope <strong>m</strong> (such as m = 0) to hit (0, ${t.y})!
+            `;
+            hintBox.classList.add('visible');
+            return;
+          }
+
+          let chosenB = 0;
+          for (let candidateB = -8; candidateB <= 8; candidateB++) {
+            const mCand = (t.y - candidateB) / t.x;
+            const hitsHazard = hazards.some((h) => Math.abs(h.y - (mCand * h.x + candidateB)) < 0.05);
+            if (!hitsHazard && Number.isInteger(((t.y - candidateB) * 2) / t.x)) {
+              chosenB = candidateB;
+              break;
+            }
+          }
+          const rise = t.y - chosenB;
+          const run = t.x;
+          const div = gcd(rise, run);
+          let rNum = rise / div;
+          let rDen = run / div;
+          if (rDen < 0) {
+            rNum = -rNum;
+            rDen = -rDen;
+          }
+          const mLabel = rDen === 1 ? `${rNum}` : `${rNum}/${rDen}`;
+
+          hintBox.innerHTML = `
+            <strong>3.1 Graphing Guide for (${t.x}, ${t.y}):</strong><br/>
+            1. Plot y-intercept <strong>b = ${chosenB}</strong> at <strong>(0, ${chosenB})</strong>.<br/>
+            2. Count Rise &amp; Run to (${t.x}, ${t.y}): Rise = <strong>${rise}</strong>, Run = <strong>${run}</strong>.<br/>
+            3. Simplified Slope <strong>m = ${mLabel}</strong> &rarr; <strong>y = ${mLabel === '1' ? '' : mLabel}x ${chosenB >= 0 ? '+ ' + chosenB : '- ' + Math.abs(chosenB)}</strong>.
+          `;
+        }
+
+        hintBox.classList.add('visible');
+      }
+
+      // ========================================================================
+      // FIRING LASER & INTERSECTION DETECTION
+      // ========================================================================
+      function computeLineEndpoints(m, b) {
+        const pts = [];
+        const minB = -10.5;
+        const maxB = 10.5;
+
+        [minB, maxB].forEach((xEdge) => {
+          const yVal = m * xEdge + b;
+          if (yVal >= minB && yVal <= maxB) pts.push({ x: xEdge, y: yVal });
+        });
+
+        if (Math.abs(m) > 1e-7) {
+          [minB, maxB].forEach((yEdge) => {
+            const xVal = (yEdge - b) / m;
+            if (xVal > minB && xVal < maxB) pts.push({ x: xVal, y: yEdge });
+          });
+        }
+
+        if (pts.length < 2) {
+          return { x1: -10, y1: b, x2: 10, y2: b };
+        }
+        return { x1: pts[0].x, y1: pts[0].y, x2: pts[1].x, y2: pts[1].y };
+      }
+
+      function pointToLineVerticalDistance(px, py, m, b) {
+        return Math.abs(m * px - py + b) / Math.hypot(m, 1);
+      }
+
+      function appendShotLog(eqText, badgeText, badgeClass) {
+        if (
+          shotLogList.children.length === 1 &&
+          shotLogList.children[0].tagName === 'DIV' &&
+          !shotLogList.children[0].classList.contains('log-entry')
+        ) {
+          shotLogList.innerHTML = '';
+        }
+        const row = document.createElement('div');
+        row.className = 'log-entry';
+        row.innerHTML = `
+          <span class="log-eq">${eqText}</span>
+          <span class="log-res ${badgeClass}">${badgeText}</span>
+        `;
+        shotLogList.prepend(row);
+      }
+
+      function spawnExplosion(gx, gy, color, count = 22) {
+        const px = toPixelX(gx);
+        const py = toPixelY(gy);
+        for (let i = 0; i < count; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 40 + Math.random() * 170;
+          particles.push({
+            x: px,
+            y: py,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            life: 0.45 + Math.random() * 0.35,
+            maxLife: 0.8,
+            color,
+            size: 2 + Math.random() * 3
+          });
+        }
+      }
+
+      function addPopup(gx, gy, text, color) {
+        floatingPopups.push({
+          x: toPixelX(gx),
+          y: toPixelY(gy) - 12,
+          text,
+          color,
+          life: 1.2
+        });
+      }
+
+      function fireLaser() {
+        if (isDemoMode) {
+          if (demoStepIndex === 5) {
+            handleInteractiveDemoFire();
+          }
+          return;
+        }
+        sfx.init();
+        const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
+        if (!valid) {
+          addPopup(0, 0, 'INVALID EQUATION!', '#fb7185');
+          return;
+        }
+
+        const eqPlain = formatEquationPlain(m, b, rise, run);
+        const endpoints = computeLineEndpoints(m, b);
+
+        turretVisualB = Math.max(-10, Math.min(10, b));
+        sfx.playLaser();
+        screenShake = 8;
+
+        const hitHazards = hazards.filter(
+          (h) => pointToLineVerticalDistance(h.x, h.y, m, b) <= 0.38
+        );
+
+        if (hitHazards.length > 0) {
+          laserBeams.push({
+            ...endpoints,
+            life: 0.65,
+            color: '#fb7185'
+          });
+          sfx.playHazard();
+          screenShake = 14;
+          hitHazards.forEach((h) => {
+            spawnExplosion(h.x, h.y, '#fb7185', 24);
+            addPopup(h.x, h.y, 'SATELLITE HIT!', '#fb7185');
+          });
+          appendShotLog(eqPlain, 'SATELLITE HIT', 'hazard');
+          return;
+        }
+
+        const hitList = targets.filter(
+          (t) => pointToLineVerticalDistance(t.x, t.y, m, b) <= 0.36
+        );
+
+        laserBeams.push({
+          ...endpoints,
+          life: 0.6,
+          color: hitList.length >= 2 ? '#fbbf24' : '#34d399'
+        });
+
+        if (hitList.length > 0) {
+          const comboMultiplier = hitList.length;
+          sfx.playHit(comboMultiplier);
+
+          hitList.forEach((t) => {
+            totalHits += 1;
+            spawnExplosion(t.x, t.y, comboMultiplier >= 2 ? '#fbbf24' : '#34d399', 26);
+            addPopup(
+              t.x,
+              t.y,
+              comboMultiplier >= 2 ? `${comboMultiplier}x LINE HIT!` : 'TARGET HIT!',
+              comboMultiplier >= 2 ? '#fbbf24' : '#34d399'
+            );
+          });
+
+          targets = targets.filter((t) => !hitList.includes(t));
+          hudHitsEl.textContent = String(totalHits);
+          updateOrderedPairsTable();
+
+          appendShotLog(
+            eqPlain,
+            comboMultiplier >= 2 ? `${comboMultiplier}x COLLINEAR HIT` : 'HIT',
+            comboMultiplier >= 2 ? 'combo' : 'hit'
+          );
+
+          if (targets.length === 0) {
+            sfx.playWaveClear();
+            addPopup(0, 0, 'ALL TARGETS CLEARED!', '#34d399');
+          }
+        } else {
+          appendShotLog(eqPlain, 'LINE PLOTTED', 'miss');
+          addPopup(0, Math.max(-9, Math.min(9, b)), 'LINE PLOTTED (0 HITS)', '#94a3b8');
+        }
+      }
+
+      // ========================================================================
+      // EVENT LISTENERS & SANDBOX GRID CLICK INTERACTIONS
+      // ========================================================================
+      [inputRise, inputRun, inputMDec, inputB].forEach((inp) => {
+        inp.addEventListener('input', updateEquationPreview);
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            fireLaser();
+          }
+        });
+      });
+
+      btnSlopeMode.addEventListener('click', () => {
+        if (slopeInputMode === 'FRACTION') {
+          const { m, valid } = getCurrentSlopeAndIntercept();
+          slopeInputMode = 'DECIMAL';
+          btnSlopeMode.textContent = 'Decimal';
+          slopeFractionGroup.style.display = 'none';
+          slopeDecimalGroup.style.display = 'flex';
+          if (valid) inputMDec.value = Math.round(m * 1000) / 1000;
+        } else {
+          const dec = parseFloat(inputMDec.value);
+          slopeInputMode = 'FRACTION';
+          btnSlopeMode.textContent = 'Fraction';
+          slopeDecimalGroup.style.display = 'none';
+          slopeFractionGroup.style.display = 'flex';
+          if (!isNaN(dec)) {
+            inputRise.value = dec;
+            inputRun.value = 1;
+          }
+        }
+        updateEquationPreview();
+      });
+
+      document.querySelectorAll('[data-b-delta]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const delta = parseFloat(btn.getAttribute('data-b-delta'));
+          const curr = parseFloat(inputB.value) || 0;
+          inputB.value = Math.max(-10, Math.min(10, curr + delta));
+          updateEquationPreview();
+        });
+      });
+
+      document.querySelectorAll('[data-b-set]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          inputB.value = btn.getAttribute('data-b-set');
+          updateEquationPreview();
+        });
+      });
+
+      // Grid Tool Selector Pills
+      const toolLabels = {
+        INSPECT: 'Inspect / Aim',
+        ADD_TARGET: '+ Alien Drone (Click grid to place)',
+        ADD_SATELLITE: '+ Satellite (Click grid to place)',
+        ERASE: 'Erase (Click object to remove)'
+      };
+
+      document.querySelectorAll('.tool-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.tool-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          gridTool = pill.getAttribute('data-tool');
+          cursorReadoutEl.innerHTML = `Tool: <strong>${toolLabels[gridTool]}</strong>`;
+        });
+      });
+
+      presetSelect.addEventListener('change', () => {
+        if (isDemoMode) exitDemoMode();
+        loadPreset(parseInt(presetSelect.value, 10));
+      });
+
+      btnResetPreset.addEventListener('click', () => {
+        if (isDemoMode) exitDemoMode();
+        loadPreset(parseInt(presetSelect.value, 10));
+      });
+
+      btnRandomSandbox.addEventListener('click', () => {
+        if (isDemoMode) exitDemoMode();
+        generateRandomSandboxGrid();
+      });
+
+      btnClearGrid.addEventListener('click', () => {
+        if (isDemoMode) exitDemoMode();
+        targets = [];
+        hazards = [];
+        selectedEntity = null;
+        presetSelect.value = '6';
+        updateOrderedPairsTable();
+        addPopup(0, 0, 'GRID CLEARED', '#94a3b8');
+      });
+
+      fireBtn.addEventListener('click', fireLaser);
+      hintBtn.addEventListener('click', generateAlgebraHint);
+      btnWatchDemo.addEventListener('click', () => {
+        if (isDemoMode) exitDemoMode();
+        else startDemoMode();
+      });
+      btnDemoPrev.addEventListener('click', () => {
+        if (demoStepIndex > 0) runDemoStep(demoStepIndex - 1);
+      });
+      btnDemoReplay.addEventListener('click', () => {
+        runDemoStep(demoStepIndex);
+      });
+      btnDemoNext.addEventListener('click', () => {
+        if (demoStepIndex < DEMO_STEPS.length - 1) {
+          runDemoStep(demoStepIndex + 1);
+        } else {
+          exitDemoMode();
+        }
+      });
+      btnDemoExit.addEventListener('click', exitDemoMode);
+      btnDemoVoice.addEventListener('click', toggleDemoVoice);
+      btnSound.addEventListener('click', () => {
+        sfx.init();
+        sfx.toggle();
+      });
+      btnClearLog.addEventListener('click', () => {
+        shotLogList.innerHTML = '';
+      });
+
+      // Canvas Hover & Sandbox Click Placement / Inspection
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        const gx = Math.round(toMathX(px));
+        const gy = Math.round(toMathY(py));
+
+        if (gx >= GRID_MIN && gx <= GRID_MAX && gy >= GRID_MIN && gy <= GRID_MAX) {
+          hoverCoord = { x: gx, y: gy };
+          const foundTarget = targets.find((t) => t.x === gx && t.y === gy);
+          const foundHazard = hazards.find((h) => h.x === gx && h.y === gy);
+
+          if (foundTarget) {
+            cursorReadoutEl.innerHTML = `Target: <strong>(${gx}, ${gy})</strong> &bull; Tool: <strong>${toolLabels[gridTool]}</strong>`;
+          } else if (foundHazard) {
+            cursorReadoutEl.innerHTML = `Satellite: <strong style="color:#60a5fa;">(${gx}, ${gy})</strong> &bull; Tool: <strong>${toolLabels[gridTool]}</strong>`;
+          } else {
+            cursorReadoutEl.innerHTML = `Coordinate: <strong>(${gx}, ${gy})</strong> &bull; Tool: <strong>${toolLabels[gridTool]}</strong>`;
+          }
+        } else {
+          hoverCoord = null;
+        }
+      });
+
+      canvas.addEventListener('click', (e) => {
+        if (isDemoMode) return;
+        const rect = canvas.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        const gx = Math.round(toMathX(px));
+        const gy = Math.round(toMathY(py));
+
+        if (gx < GRID_MIN || gx > GRID_MAX || gy < GRID_MIN || gy > GRID_MAX) return;
+
+        if (gridTool === 'INSPECT') {
+          const foundTarget = targets.find((t) => t.x === gx && t.y === gy);
+          if (foundTarget) {
+            selectedEntity = foundTarget;
+            if (hintBox.classList.contains('visible')) {
+              generateAlgebraHint();
+            }
+          } else if (gx === 0) {
+            // Clicking directly on the y-axis sets y-intercept b!
+            inputB.value = gy;
+            updateEquationPreview();
+            addPopup(0, gy, `b = ${gy}`, '#fbbf24');
+          }
+        } else if (gridTool === 'ADD_TARGET') {
+          targets = targets.filter((t) => !(t.x === gx && t.y === gy));
+          hazards = hazards.filter((h) => !(h.x === gx && h.y === gy));
+          const nt = {
+            id: `custom-${Date.now()}`,
+            x: gx,
+            y: gy,
+            type: 'drone',
+            hp: 1,
+            maxHp: 1,
+            pulse: 0
+          };
+          targets.push(nt);
+          selectedEntity = nt;
+          updateOrderedPairsTable();
+          addPopup(gx, gy, `+TARGET (${gx}, ${gy})`, '#34d399');
+        } else if (gridTool === 'ADD_SATELLITE') {
+          targets = targets.filter((t) => !(t.x === gx && t.y === gy));
+          hazards = hazards.filter((h) => !(h.x === gx && h.y === gy));
+          hazards.push({
+            id: `sat-${Date.now()}`,
+            x: gx,
+            y: gy,
+            label: `SAT-${hazards.length + 1}`,
+            pulse: 0
+          });
+          updateOrderedPairsTable();
+          addPopup(gx, gy, `+SATELLITE (${gx}, ${gy})`, '#60a5fa');
+        } else if (gridTool === 'ERASE') {
+          const prevLen = targets.length + hazards.length;
+          targets = targets.filter((t) => !(t.x === gx && t.y === gy));
+          hazards = hazards.filter((h) => !(h.x === gx && h.y === gy));
+          if (targets.length + hazards.length < prevLen) {
+            updateOrderedPairsTable();
+            addPopup(gx, gy, 'REMOVED', '#94a3b8');
+          }
+        }
+      });
+
+      // ========================================================================
+      // RENDERING PIPELINE
+      // ========================================================================
+      function drawGrid() {
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+        ctx.fillStyle = '#060c1a';
+        ctx.fillRect(pad, pad, cellSize * GRID_SPAN, cellSize * GRID_SPAN);
+
+        for (let i = GRID_MIN; i <= GRID_MAX; i++) {
+          const px = toPixelX(i);
+          const py = toPixelY(i);
+          const isAxis = i === 0;
+          const isMajor = i % 5 === 0;
+
+          ctx.strokeStyle = isAxis
+            ? '#34d399'
+            : isMajor
+            ? 'rgba(148, 163, 184, 0.28)'
+            : 'rgba(148, 163, 184, 0.11)';
+          ctx.lineWidth = isAxis ? 2.2 : 1;
+          ctx.beginPath();
+          ctx.moveTo(px, pad);
+          ctx.lineTo(px, pad + cellSize * GRID_SPAN);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(pad, py);
+          ctx.lineTo(pad + cellSize * GRID_SPAN, py);
+          ctx.stroke();
+
+          if (i !== 0 && (i % 2 === 0 || cellSize >= 26)) {
+            ctx.fillStyle = isMajor ? '#cbd5e1' : '#64748b';
+            ctx.font = '700 11px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(String(i), px, toPixelY(0) + 5);
+
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(i), toPixelX(0) - 6, py);
+          }
+        }
+
+        ctx.fillStyle = '#34d399';
+        ctx.font = '800 13px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('x', pad + cellSize * GRID_SPAN + 8, toPixelY(0));
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('y', toPixelX(0), pad - 8);
+
+        if (hoverCoord) {
+          const hx = toPixelX(hoverCoord.x);
+          const hy = toPixelY(hoverCoord.y);
+          ctx.strokeStyle =
+            gridTool === 'ADD_TARGET'
+              ? '#34d399'
+              : gridTool === 'ADD_SATELLITE'
+              ? '#60a5fa'
+              : gridTool === 'ERASE'
+              ? '#fb7185'
+              : 'rgba(56, 189, 248, 0.65)';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      function drawTargetingScaffolds() {
+        const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
+        if (!valid) return;
+
+        if (chkPreviewLine.checked) {
+          const ep = computeLineEndpoints(m, b);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.55)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([7, 6]);
+          ctx.beginPath();
+          ctx.moveTo(toPixelX(ep.x1), toPixelY(ep.y1));
+          ctx.lineTo(toPixelX(ep.x2), toPixelY(ep.y2));
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        if (chkRiseRun.checked && Math.abs(b) <= 10) {
+          let stepRun = slopeInputMode === 'FRACTION' ? run : 1;
+          let stepRise = slopeInputMode === 'FRACTION' ? rise : m;
+
+          if (Math.abs(stepRun) > 0 && Math.abs(stepRun) <= 10 && Math.abs(b + stepRise) <= 10) {
+            const x0 = toPixelX(0);
+            const y0 = toPixelY(b);
+            const x1 = toPixelX(stepRun);
+            const y1 = toPixelY(b + stepRise);
+
+            ctx.save();
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x0, y1);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#34d399';
+            ctx.beginPath();
+            ctx.moveTo(x0, y1);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+
+            // Plot second lattice point (run, b + rise)
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath();
+            ctx.arc(x1, y1, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = '800 11px "Courier New", monospace';
+            if (stepRise !== 0) {
+              ctx.fillStyle = '#fbbf24';
+              ctx.textAlign = stepRun >= 0 ? 'right' : 'left';
+              ctx.fillText(
+                `Rise ${stepRise > 0 ? '+' + stepRise : stepRise}`,
+                x0 + (stepRun >= 0 ? -6 : 6),
+                (y0 + y1) / 2
+              );
+            }
+            if (stepRun !== 0) {
+              ctx.fillStyle = '#34d399';
+              ctx.textAlign = 'center';
+              ctx.fillText(
+                `Run ${stepRun > 0 ? '+' + stepRun : stepRun}`,
+                (x0 + x1) / 2,
+                y1 + (stepRise >= 0 ? -8 : 14)
+              );
+            }
+            ctx.restore();
+          }
+        }
+      }
+
+      function drawHazardsAndTargets() {
+        hazards.forEach((h) => {
+          const px = toPixelX(h.x);
+          const py = toPixelY(h.y);
+          const r = Math.max(10, cellSize * 0.36);
+
+          ctx.save();
+          ctx.translate(px, py);
+
+          const ringR = r + 4 + Math.sin(globalTime * 4 + h.pulse) * 2;
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.45)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#1d4ed8';
+          ctx.strokeStyle = '#93c5fd';
+          ctx.lineWidth = 1.2;
+          ctx.fillRect(-r * 1.45, -r * 0.32, r * 2.9, r * 0.64);
+          ctx.strokeRect(-r * 1.45, -r * 0.32, r * 2.9, r * 0.64);
+
+          ctx.fillStyle = '#eff6ff';
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.48, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (chkShowCoords.checked || (hoverCoord && hoverCoord.x === h.x && hoverCoord.y === h.y)) {
+            ctx.fillStyle = '#93c5fd';
+            ctx.font = '800 11px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`(${h.x},${h.y})`, 0, -r - 8);
+          }
+          ctx.restore();
+        });
+
+        targets.forEach((t) => {
+          const px = toPixelX(t.x);
+          const py = toPixelY(t.y);
+          const r = Math.max(10, cellSize * 0.38);
+          const isSelected = selectedEntity && selectedEntity.id === t.id;
+
+          ctx.save();
+          ctx.translate(px, py);
+
+          if (isSelected) {
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.8;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.arc(0, 0, r + 6, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          if (t.type === 'asteroid') {
+            ctx.rotate(globalTime * 0.6 + t.pulse);
+            ctx.fillStyle = '#78350f';
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const sides = 7;
+            for (let i = 0; i < sides; i++) {
+              const ang = (i / sides) * Math.PI * 2;
+              const rad = r * (i % 2 === 0 ? 1.05 : 0.82);
+              const vx = Math.cos(ang) * rad;
+              const vy = Math.sin(ang) * rad;
+              if (i === 0) ctx.moveTo(vx, vy);
+              else ctx.lineTo(vx, vy);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.rotate(-(globalTime * 0.6 + t.pulse));
+          } else {
+            ctx.fillStyle = '#881337';
+            ctx.strokeStyle = '#fb7185';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -r);
+            ctx.lineTo(r * 0.95, 0);
+            ctx.lineTo(0, r * 0.75);
+            ctx.lineTo(-r * 0.95, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#fda4af';
+            ctx.beginPath();
+            ctx.arc(0, -r * 0.1, r * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          if (chkShowCoords.checked || isSelected || (hoverCoord && hoverCoord.x === t.x && hoverCoord.y === t.y)) {
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '800 11px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`(${t.x}, ${t.y})`, 0, -r - 9);
+          }
+
+          ctx.restore();
+        });
+      }
+
+      function drawTurret() {
+        const { m, b, valid } = getCurrentSlopeAndIntercept();
+        const targetB = valid ? Math.max(-10, Math.min(10, b)) : turretVisualB;
+        const targetAngle = valid ? Math.atan(-m) : turretVisualAngle;
+
+        turretVisualB += (targetB - turretVisualB) * 0.22;
+        turretVisualAngle += (targetAngle - turretVisualAngle) * 0.22;
+
+        const tx = toPixelX(0);
+        const ty = toPixelY(turretVisualB);
+
+        ctx.save();
+        ctx.translate(tx, ty);
+
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 17, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.rotate(turretVisualAngle);
+        ctx.fillStyle = '#34d399';
+        ctx.strokeStyle = '#ecfdf5';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(-18, -3.5, 36, 7);
+        ctx.strokeRect(-18, -3.5, 36, 7);
+        ctx.restore();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '800 11px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`(0, ${Math.round(turretVisualB * 10) / 10})`, 14, -12);
+
+        ctx.restore();
+      }
+
+      function drawDemoOverlays() {
+        if (!isDemoMode) return;
+
+        demoVisuals.staircaseSteps.forEach((step) => {
+          const xStart = toPixelX(step.x0);
+          const yStart = toPixelY(step.y0);
+          const xMid = xStart;
+          const yMid = toPixelY(step.y0 + step.rise);
+          const xEnd = toPixelX(step.x0 + step.run);
+          const yEnd = yMid;
+
+          ctx.save();
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xStart, yStart);
+          ctx.lineTo(xMid, yMid);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#34d399';
+          ctx.beginPath();
+          ctx.moveTo(xMid, yMid);
+          ctx.lineTo(xEnd, yEnd);
+          ctx.stroke();
+
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#34d399';
+          ctx.beginPath();
+          ctx.arc(xEnd, yEnd, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.font = '800 11px "Courier New", monospace';
+          ctx.fillStyle = '#fbbf24';
+          ctx.textAlign = 'right';
+          ctx.fillText(
+            `${step.rise > 0 ? '+' + step.rise : step.rise}`,
+            xStart - 6,
+            (yStart + yMid) / 2 + 3
+          );
+          ctx.fillStyle = '#34d399';
+          ctx.textAlign = 'center';
+          ctx.fillText(
+            `${step.run > 0 ? '+' + step.run : step.run}`,
+            (xMid + xEnd) / 2,
+            yEnd + (step.rise >= 0 ? -7 : 15)
+          );
+          ctx.restore();
+        });
+
+        demoVisuals.spotlights.forEach((sp) => {
+          const sx = toPixelX(sp.x);
+          const sy = toPixelY(sp.y);
+          const pulseR = 16 + Math.sin(globalTime * 5) * 4;
+
+          ctx.save();
+          ctx.strokeStyle = sp.color;
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.arc(sx, sy, pulseR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.globalAlpha = 0.16;
+          ctx.fillStyle = sp.color;
+          ctx.beginPath();
+          ctx.arc(sx, sy, pulseR - 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          if (sp.label) {
+            ctx.font = '800 11px "Courier New", monospace';
+            const textW = ctx.measureText(sp.label).width;
+            const boxW = textW + 12;
+            const boxH = 20;
+            const bx = Math.max(pad + 4, Math.min(canvasSize - pad - boxW - 4, sx - boxW / 2));
+            const by = sy + pulseR + 6;
+
+            ctx.fillStyle = 'rgba(4, 8, 18, 0.9)';
+            ctx.strokeStyle = sp.color;
+            ctx.lineWidth = 1.2;
+            ctx.fillRect(bx, by, boxW, boxH);
+            ctx.strokeRect(bx, by, boxW, boxH);
+
+            ctx.fillStyle = sp.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(sp.label, bx + boxW / 2, by + boxH / 2);
+          }
+          ctx.restore();
+        });
+
+        if (demoVisuals.pointerBadge) {
+          const pb = demoVisuals.pointerBadge;
+          const px = toPixelX(pb.x);
+          const py = toPixelY(pb.y);
+          const bob = Math.sin(globalTime * 4) * 3;
+
+          ctx.save();
+          ctx.font = '800 12px "Segoe UI", sans-serif';
+          const tw = ctx.measureText(pb.text).width;
+          const bw = tw + 18;
+          const bh = 26;
+          const bx = Math.max(pad + 6, Math.min(canvasSize - pad - bw - 6, px - bw / 2));
+          const by = Math.max(pad + 38, py - 44 + bob);
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+          ctx.strokeStyle = pb.color;
+          ctx.lineWidth = 1.8;
+          ctx.fillRect(bx, by, bw, bh);
+          ctx.strokeRect(bx, by, bw, bh);
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(pb.text, bx + bw / 2, by + bh / 2);
+          ctx.restore();
+        }
+      }
+
+      function drawLasersAndParticles(dt) {
+        for (let i = laserBeams.length - 1; i >= 0; i--) {
+          const lb = laserBeams[i];
+          lb.life -= dt;
+          if (lb.life <= 0) {
+            laserBeams.splice(i, 1);
+            continue;
+          }
+          const alpha = Math.min(1, lb.life * 2);
+          ctx.save();
+          ctx.strokeStyle = lb.color;
+          ctx.globalAlpha = alpha * 0.45;
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.moveTo(toPixelX(lb.x1), toPixelY(lb.y1));
+          ctx.lineTo(toPixelX(lb.x2), toPixelY(lb.y2));
+          ctx.stroke();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(toPixelX(lb.x1), toPixelY(lb.y1));
+          ctx.lineTo(toPixelX(lb.x2), toPixelY(lb.y2));
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        for (let i = floatingPopups.length - 1; i >= 0; i--) {
+          const fp = floatingPopups[i];
+          fp.y -= 28 * dt;
+          fp.life -= dt;
+          if (fp.life <= 0) {
+            floatingPopups.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, fp.life * 1.4);
+          ctx.font = '800 13px "Courier New", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = fp.color;
+          ctx.shadowColor = '#000';
+          ctx.shadowBlur = 5;
+          ctx.fillText(fp.text, fp.x, fp.y);
+          ctx.restore();
+        }
+      }
+
+      // ========================================================================
+      // MAIN ANIMATION LOOP (STARTED ON WINDOW.ONLOAD)
+      // ========================================================================
+      let lastTs = 0;
+
+      function animate(ts) {
+        if (!lastTs) lastTs = ts;
+        const dt = Math.min(0.05, (ts - lastTs) / 1000);
+        lastTs = ts;
+        globalTime += dt;
+
+        ctx.save();
+        if (screenShake > 0) {
+          screenShake = Math.max(0, screenShake - 45 * dt);
+          ctx.translate(
+            (Math.random() - 0.5) * screenShake,
+            (Math.random() - 0.5) * screenShake
+          );
+        }
+
+        drawGrid();
+        drawTargetingScaffolds();
+        drawHazardsAndTargets();
+        drawTurret();
+        drawDemoOverlays();
+        drawLasersAndParticles(dt);
+
+        ctx.restore();
+        requestAnimationFrame(animate);
+      }
+
+      window.onload = function () {
+        resizeGrid();
+        loadPreset(0);
+        updateEquationPreview();
+        requestAnimationFrame(animate);
+      };
+    })();
+  </script>
+</body>
+</html>

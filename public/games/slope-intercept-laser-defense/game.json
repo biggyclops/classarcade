@@ -1,0 +1,11 @@
+{
+  "title": "Slope-Intercept Laser Defense",
+  "short": "LASER DEFENSE",
+  "genre": "Tactical math game",
+  "skill": "Slope-intercept form",
+  "description": "Use linear equations and slope-intercept form to configure a defensive laser grid.",
+  "color": "#34d399",
+  "time": "15 min",
+  "classroom": ["Algebra 1A"],
+  "cover": "cover.png"
+}

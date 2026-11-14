@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { games, classroomNames, concepts, Game } from "./data";
 import { Artwork, GameCard, Dialog, Primary } from "./components";
+import { asset } from "./assets";
 type Collection = { name: string; ids: number[] };
 type Modal = "settings" | "import" | "collection" | null;
 function saved<T>(key: string, fallback: T): T {
@@ -952,7 +953,7 @@ export default function App() {
             {launch.launchUrl ? (
               <div className="game-player">
                 <iframe
-                  src={launch.launchUrl}
+                  src={asset(launch.launchUrl)}
                   title={launch.title}
                   allow="fullscreen; autoplay"
                   sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
