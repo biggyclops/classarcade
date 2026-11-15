@@ -1,0 +1,11 @@
+{
+  "title": "Launch Control: Operation Zero",
+  "short": "OPERATION ZERO",
+  "genre": "Aerospace mission simulator",
+  "skill": "Order of operations",
+  "description": "Stabilize a realistic launch sequence by selecting and solving each operation in the correct PEMDAS order.",
+  "color": "#59d8ef",
+  "time": "20 min",
+  "classroom": ["Algebra 1A", "Individualized Instruction"],
+  "cover": "mission-control.png"
+}

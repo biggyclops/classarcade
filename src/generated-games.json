@@ -18,6 +18,23 @@
   },
   {
     "id": 1001,
+    "title": "Launch Control: Operation Zero",
+    "short": "OPERATION ZERO",
+    "genre": "Aerospace mission simulator",
+    "skill": "Order of operations",
+    "description": "Stabilize a realistic launch sequence by selecting and solving each operation in the correct PEMDAS order.",
+    "color": "#59d8ef",
+    "time": "20 min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Individualized Instruction"
+    ],
+    "cover": "/games/operation-zero/mission-control.png",
+    "launchUrl": "/games/operation-zero/index.html"
+  },
+  {
+    "id": 1002,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",
     "genre": "Tactical math game",
