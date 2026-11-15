@@ -1,0 +1,14 @@
+{
+  "title": "PEMDAS Defuser",
+  "short": "PEMDAS DEFUSER",
+  "genre": "Arcade math challenge",
+  "skill": "Order of operations (PEMDAS)",
+  "description": "Select the next correct operation and solve it step by step before the timer runs out. Choose Standard or Hardcore mode.",
+  "color": "#00f0ff",
+  "time": "5–10 min",
+  "classroom": [
+    "Algebra 1A",
+    "Algebra 1B"
+  ],
+  "cover": "cover.svg"
+}

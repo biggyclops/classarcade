@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PEMDAS Defuser — Arcade Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-void: #05070e;
+      --cabinet-outer: #131826;
+      --cabinet-bezel: #090c15;
+      --crt-screen: #070d19;
+      --border-metal: #2b3856;
+      --neon-cyan: #00f0ff;
+      --neon-pink: #ff2a85;
+      --neon-green: #39ff14;
+      --neon-amber: #ffb700;
+      --neon-red: #ff3131;
+      --neon-purple: #b829ff;
+      --text-main: #f1f5f9;
+      --text-dim: #7f92b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-void);
+      background-image:
+        radial-gradient(circle at 50% 15%, rgba(0, 240, 255, 0.12) 0%, transparent 55%),
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text-main);
+      font-family: 'Chakra Petch', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* Particle FX Canvas Overlay */
+    #fx-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    /* Outer Arcade Cabinet Shell */
+    .arcade-cabinet {
+      position: relative;
+      width: 100%;
+      max-width: 840px;
+      background: linear-gradient(180deg, #1b2236 0%, #0f1422 100%);
+      border: 4px solid #324163;
+      border-radius: 26px;
+      padding: 18px;
+      box-shadow:
+        0 0 0 3px #070a12,
+        0 28px 70px rgba(0, 0, 0, 0.9),
+        0 0 45px rgba(0, 240, 255, 0.15);
+    }
+
+    /* Corner Cabinet Bolts */
+    .bolt {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #64748b, #1e293b);
+      border: 1px solid #090d16;
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+      z-index: 5;
+    }
+    .bolt::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 2px;
+      right: 2px;
+      height: 2px;
+      background: #0f172a;
+      transform: translateY(-50%) rotate(35deg);
+    }
+    .bolt.tl { top: 10px; left: 10px; }
+    .bolt.tr { top: 10px; right: 10px; }
+    .bolt.bl { bottom: 10px; left: 10px; }
+    .bolt.br { bottom: 10px; right: 10px; }
+
+    /* Top Illuminated Arcade Marquee */
+    .marquee {
+      background: linear-gradient(135deg, #160929 0%, #091d36 50%, #240b24 100%);
+      border: 3px solid var(--neon-cyan);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      box-shadow:
+        0 0 18px rgba(0, 240, 255, 0.35),
+        inset 0 0 24px rgba(184, 41, 255, 0.25);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .marquee-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .marquee-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.95rem, 2.3vw, 1.3rem);
+      color: var(--neon-cyan);
+      text-shadow:
+        0 0 8px rgba(0, 240, 255, 0.9),
+        0 0 18px rgba(0, 240, 255, 0.5),
+        2px 2px 0px #ff2a85;
+      letter-spacing: 1px;
+    }
+
+    .marquee-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--neon-amber);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 6px rgba(255, 183, 0, 0.6);
+    }
+
+    .cabinet-toggles {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mini-switch {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.58rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #0d1322;
+      color: var(--neon-cyan);
+      border: 2px solid #2b3a5c;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #05080f;
+      transition: transform 0.08s, box-shadow 0.08s, border-color 0.2s, color 0.2s;
+    }
+
+    .mini-switch.active {
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+      text-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
+    }
+
+    .mini-switch:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #05080f;
+    }
+
+    /* Recessed CRT Monitor Bezel */
+    .crt-bezel {
+      background: #04060c;
+      border: 6px solid #1e273d;
+      border-radius: 20px;
+      padding: 6px;
+      box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.95),
+        0 4px 12px rgba(0, 0, 0, 0.7);
+    }
+
+    /* CRT Screen Container */
+    .crt-monitor {
+      position: relative;
+      background: radial-gradient(circle at 50% 40%, #0d172a 0%, #060a14 100%);
+      border-radius: 14px;
+      padding: 20px;
+      overflow: hidden;
+      min-height: 490px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Toggleable CRT Scanlines & Vignette */
+    .crt-monitor.crt-enabled::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.32) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 40;
+    }
+
+    .crt-monitor.crt-enabled::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.65) 100%);
+      box-shadow: inset 0 0 40px rgba(0, 240, 255, 0.08);
+      pointer-events: none;
+      z-index: 41;
+    }
+
+    /* Arcade Scoreboard Strip */
+    .arcade-hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: rgba(5, 9, 18, 0.85);
+      border: 2px solid #22304f;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .hud-cell {
+      text-align: center;
+    }
+
+    .hud-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .hud-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.75rem, 1.8vw, 0.98rem);
+      color: var(--text-main);
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+    }
+
+    .hud-val.cyan { color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 240, 255, 0.7); }
+    .hud-val.amber { color: var(--neon-amber); text-shadow: 0 0 8px rgba(255, 183, 0, 0.7); }
+    .hud-val.green { color: var(--neon-green); text-shadow: 0 0 8px rgba(57, 255, 20, 0.7); }
+    .hud-val.danger { color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 49, 49, 0.9); animation: pulseFast 0.45s infinite alternate; }
+
+    @keyframes pulseFast {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0.65; transform: scale(1.06); }
+    }
+
+    /* Segmented LED Timer Bar */
+    .led-timer-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .bomb-core-led {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 12px var(--neon-green);
+      flex-shrink: 0;
+      animation: ledBlink 1s infinite alternate;
+    }
+
+    .bomb-core-led.warning {
+      background: var(--neon-amber);
+      box-shadow: 0 0 12px var(--neon-amber);
+      animation-duration: 0.5s;
+    }
+
+    .bomb-core-led.critical {
+      background: var(--neon-red);
+      box-shadow: 0 0 16px var(--neon-red);
+      animation-duration: 0.2s;
+    }
+
+    @keyframes ledBlink {
+      from { opacity: 1; }
+      to { opacity: 0.35; }
+    }
+
+    .timer-bar-bg {
+      flex: 1;
+      height: 14px;
+      background: #04070f;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 2px solid #243354;
+      padding: 2px;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      border-radius: 3px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--neon-green),
+        var(--neon-green) 10px,
+        rgba(0, 0, 0, 0.35) 10px,
+        rgba(0, 0, 0, 0.35) 13px
+      );
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.5);
+      transition: width 0.1s linear;
+    }
+
+    .timer-bar.warning {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--neon-amber),
+        var(--neon-amber) 10px,
+        rgba(0, 0, 0, 0.35) 10px,
+        rgba(0, 0, 0, 0.35) 13px
+      );
+      box-shadow: 0 0 12px rgba(255, 183, 0, 0.5);
+    }
+
+    .timer-bar.critical {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--neon-red),
+        var(--neon-red) 10px,
+        rgba(0, 0, 0, 0.35) 10px,
+        rgba(0, 0, 0, 0.35) 13px
+      );
+      box-shadow: 0 0 14px rgba(255, 49, 49, 0.7);
+    }
+
+    /* PEMDAS Priority Reference Strip */
+    .pemdas-guide {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 5;
+    }
+
+    .badge {
+      background: rgba(11, 18, 34, 0.9);
+      border: 1px solid #28385c;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .badge b {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 6px rgba(0, 240, 255, 0.5);
+    }
+
+    /* Bomb Defusal Wire & Funnel Core */
+    .funnel-history {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-height: 48px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .history-row {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.12rem;
+      color: #6f86b3;
+      letter-spacing: 2px;
+      animation: fadeInDown 0.18s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .workspace-frame {
+      position: relative;
+      background: linear-gradient(180deg, #040812 0%, #091122 100%);
+      border: 2px solid #2a3b63;
+      border-radius: 12px;
+      padding: 24px 12px;
+      box-shadow:
+        inset 0 0 25px rgba(0, 0, 0, 0.9),
+        0 0 15px rgba(0, 240, 255, 0.08);
+      z-index: 5;
+    }
+
+    .workspace-tag {
+      position: absolute;
+      top: -9px;
+      left: 14px;
+      background: #091122;
+      padding: 0 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      color: var(--neon-pink);
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(255, 42, 133, 0.7);
+    }
+
+    .mode-tag {
+      position: absolute;
+      top: -9px;
+      right: 14px;
+      background: #091122;
+      padding: 0 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      color: var(--neon-cyan);
+      letter-spacing: 1px;
+    }
+
+    .mode-tag.hardcore {
+      color: var(--neon-red);
+      text-shadow: 0 0 6px rgba(255, 49, 49, 0.7);
+    }
+
+    .workspace {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 76px;
+    }
+
+    /* Math Tokens */
+    .token {
+      position: relative;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.9rem;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 8px;
+      transition: transform 0.1s, background 0.12s, box-shadow 0.12s;
+    }
+
+    .token.num {
+      background: #101a30;
+      border: 1px solid #26385e;
+      color: var(--text-main);
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+    }
+
+    .token.paren {
+      background: transparent;
+      border: 1px dashed #344875;
+      color: var(--neon-purple);
+      padding: 7px 9px;
+      text-shadow: 0 0 8px rgba(184, 41, 255, 0.6);
+    }
+
+    .token.op {
+      background: linear-gradient(180deg, #162847 0%, #0d1930 100%);
+      border: 2px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      cursor: pointer;
+      box-shadow: 0 4px 0 #07384a, 0 0 10px rgba(0, 240, 255, 0.25);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+    }
+
+    .token.op:hover {
+      background: var(--neon-cyan);
+      color: #050914;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #07384a, 0 0 18px rgba(0, 240, 255, 0.75);
+      text-shadow: none;
+    }
+
+    .token.op:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #07384a;
+    }
+
+    .op-hotkey {
+      position: absolute;
+      top: -8px;
+      right: -6px;
+      background: #070c18;
+      color: var(--neon-amber);
+      border: 1px solid var(--neon-amber);
+      border-radius: 4px;
+      font-size: 0.62rem;
+      line-height: 1;
+      padding: 2px 4px;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    .token.highlight {
+      background: rgba(255, 183, 0, 0.22) !important;
+      border-color: var(--neon-amber) !important;
+      color: var(--neon-amber) !important;
+      box-shadow: 0 0 16px rgba(255, 183, 0, 0.5) !important;
+      text-shadow: 0 0 8px rgba(255, 183, 0, 0.8) !important;
+    }
+
+    /* Action & Prompt Area */
+    .prompt-area {
+      margin-top: 18px;
+      text-align: center;
+      min-height: 86px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .status-msg {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+    }
+
+    .solve-form {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .solve-form.active {
+      display: flex;
+    }
+
+    .sub-expr-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--neon-amber);
+      text-shadow: 0 0 10px rgba(255, 183, 0, 0.65);
+    }
+
+    input[type="number"] {
+      width: 130px;
+      padding: 9px 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      background: #040812;
+      border: 2px solid var(--neon-amber);
+      border-radius: 8px;
+      color: var(--neon-green);
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.85), 0 0 12px rgba(255, 183, 0, 0.3);
+      outline: none;
+    }
+
+    /* Tactile 3D Arcade Push-Buttons */
+    .arcade-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.78rem;
+      padding: 14px 22px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: linear-gradient(180deg, #00f0ff 0%, #00a8cc 100%);
+      color: #040812;
+      box-shadow:
+        0 5px 0 #005b70,
+        0 8px 18px rgba(0, 240, 255, 0.4);
+      transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+    }
+
+    .arcade-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .arcade-btn:active {
+      transform: translateY(4px);
+      box-shadow:
+        0 1px 0 #005b70,
+        0 3px 8px rgba(0, 240, 255, 0.3);
+    }
+
+    .arcade-btn.pink {
+      background: linear-gradient(180deg, #ff3b93 0%, #c91463 100%);
+      color: #ffffff;
+      box-shadow:
+        0 5px 0 #700735,
+        0 8px 20px rgba(255, 42, 133, 0.45);
+    }
+
+    .arcade-btn.pink:active {
+      box-shadow: 0 1px 0 #700735;
+    }
+
+    .arcade-btn.green {
+      background: linear-gradient(180deg, #4dff29 0%, #23b806 100%);
+      color: #040a02;
+      box-shadow:
+        0 5px 0 #116102,
+        0 8px 20px rgba(57, 255, 20, 0.45);
+    }
+
+    .arcade-btn.green:active {
+      box-shadow: 0 1px 0 #116102;
+    }
+
+    .arcade-btn.amber {
+      background: linear-gradient(180deg, #ffc82c 0%, #d48c00 100%);
+      color: #0f0900;
+      box-shadow:
+        0 4px 0 #754c00,
+        0 6px 14px rgba(255, 183, 0, 0.35);
+      font-size: 0.65rem;
+      padding: 10px 14px;
+    }
+
+    .arcade-btn.amber:active {
+      box-shadow: 0 1px 0 #754c00;
+    }
+
+    .arcade-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 3px 0 #1e293b;
+    }
+
+    /* Footer Control Deck Inside CRT */
+    .shield-box {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-top: 1px solid #1e2c4a;
+      padding-top: 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      position: relative;
+      z-index: 5;
+    }
+
+    .shield-box b {
+      color: var(--neon-amber);
+    }
+
+    /* Start & Game Over Overlays */
+    .overlay {
+      text-align: center;
+      padding: 6px 4px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .coin-blink {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.85rem;
+      color: var(--neon-amber);
+      text-shadow: 0 0 10px rgba(255, 183, 0, 0.8);
+      margin-bottom: 14px;
+      animation: coinFlash 1.1s steps(2, start) infinite;
+    }
+
+    @keyframes coinFlash {
+      to { visibility: hidden; }
+    }
+
+    .overlay h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
+    .rules-list {
+      color: var(--text-main);
+      max-width: 560px;
+      margin: 0 auto 18px;
+      line-height: 1.55;
+      font-size: 0.95rem;
+      background: rgba(6, 11, 22, 0.75);
+      border: 1px solid #223254;
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+
+    .tier-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      max-width: 580px;
+      margin: 0 auto 20px;
+    }
+
+    .tier-card {
+      background: #091122;
+      border: 2px solid #253659;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .tier-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .tier-card.selected[data-tier="standard"] {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.25), inset 0 0 14px rgba(0, 240, 255, 0.1);
+    }
+
+    .tier-card.selected[data-tier="hardcore"] {
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 18px rgba(255, 42, 133, 0.28), inset 0 0 14px rgba(255, 42, 133, 0.12);
+    }
+
+    .tier-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.72rem;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tier-card[data-tier="standard"] .tier-title { color: var(--neon-cyan); }
+    .tier-card[data-tier="hardcore"] .tier-title { color: var(--neon-pink); }
+
+    .tier-desc {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+      max-width: 540px;
+      margin: 18px auto 22px;
+    }
+
+    .stat-card {
+      background: #080f1f;
+      border: 2px solid #243559;
+      border-radius: 10px;
+      padding: 14px 10px;
+    }
+
+    .stat-card span {
+      display: block;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .stat-card strong {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.15rem;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    }
+
+    .new-record-banner {
+      display: none;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.75rem;
+      color: var(--neon-green);
+      text-shadow: 0 0 10px rgba(57, 255, 20, 0.8);
+      margin-bottom: 12px;
+      animation: pulseFast 0.5s infinite alternate;
+    }
+
+    /* Floating Score / Penalty Popups */
+    .float-popup {
+      position: fixed;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.82rem;
+      pointer-events: none;
+      z-index: 70;
+      white-space: nowrap;
+      animation: floatUpFade 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes floatUpFade {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(0.85);
+      }
+      20% {
+        transform: translate(-50%, -14px) scale(1.08);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -56px) scale(0.95);
+      }
+    }
+
+    /* Cabinet Lower Coin Door Strip */
+    .cabinet-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding: 0 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: #54668c;
+    }
+
+    .coin-slot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0a0e18;
+      border: 2px solid #26334f;
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: var(--neon-red);
+      text-shadow: 0 0 6px rgba(255, 49, 49, 0.6);
+    }
+
+    .shake {
+      animation: shake 0.35s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-9px) rotate(-0.4deg); }
+      40% { transform: translateX(9px) rotate(0.4deg); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    @media (max-width: 600px) {
+      .arcade-cabinet { padding: 10px; border-radius: 18px; }
+      .crt-monitor { padding: 14px; min-height: 440px; }
+      .arcade-hud { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .token { font-size: 1.45rem; padding: 6px 10px; }
+      .arcade-btn { font-size: 0.68rem; padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="fx-canvas"></canvas>
+
+<div class="arcade-cabinet" id="cabinet">
+  <div class="bolt tl"></div>
+  <div class="bolt tr"></div>
+  <div class="bolt bl"></div>
+  <div class="bolt br"></div>
+
+  <!-- Illuminated Arcade Marquee -->
+  <div class="marquee">
+    <div class="marquee-title-wrap">
+      <div class="marquee-title">⚡ PEMDAS DEFUSER</div>
+      <div class="marquee-sub">ORDNANCE LOGIC UNIT // REV 2.6</div>
+    </div>
+    <div class="cabinet-toggles">
+      <button type="button" class="mini-switch active" id="crt-toggle" onclick="toggleCRT()">CRT: ON</button>
+      <button type="button" class="mini-switch active" id="sfx-toggle" onclick="toggleSound()">SFX: ON</button>
+    </div>
+  </div>
+
+  <!-- CRT Monitor Bezel & Screen -->
+  <div class="crt-bezel">
+    <div class="crt-monitor crt-enabled" id="crt-screen">
+
+      <!-- Top Arcade Scoreboard -->
+      <div class="arcade-hud">
+        <div class="hud-cell">
+          <div class="hud-label">1UP SCORE</div>
+          <div class="hud-val cyan" id="score">0000</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">HIGH SCORE</div>
+          <div class="hud-val amber" id="high-score">0000</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">STREAK</div>
+          <div class="hud-val green" id="streak">0</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">DETONATION</div>
+          <div class="hud-val" id="time-text">60s</div>
+        </div>
+      </div>
+
+      <!-- Active Gameplay Screen -->
+      <div id="game-screen" style="display: none;">
+        <div class="led-timer-wrap">
+          <div class="bomb-core-led" id="bomb-led"></div>
+          <div class="timer-bar-bg">
+            <div class="timer-bar" id="timer-bar"></div>
+          </div>
+        </div>
+
+        <div class="pemdas-guide">
+          <div class="badge"><b>1. ( )</b> Innermost</div>
+          <div class="badge"><b>2. ^</b> Right → Left</div>
+          <div class="badge"><b>3. × ÷</b> Left → Right</div>
+          <div class="badge"><b>4. + −</b> Left → Right</div>
+        </div>
+
+        <div class="funnel-history" id="funnel-history"></div>
+
+        <div class="workspace-frame">
+          <span class="workspace-tag">CIRCUIT LOCK</span>
+          <span class="mode-tag" id="mode-badge">STANDARD</span>
+          <div class="workspace" id="workspace"></div>
+        </div>
+
+        <div class="prompt-area">
+          <div class="status-msg" id="status-msg">SELECT FIRST OPERATOR TO CUT!</div>
+          <form class="solve-form" id="solve-form">
+            <span class="sub-expr-label" id="sub-expr-label"></span>
+            <input type="number" step="any" id="answer-input" required autocomplete="off" />
+            <button type="submit" class="arcade-btn green">EXECUTE</button>
+          </form>
+        </div>
+
+        <div class="shield-box">
+          <span>KEYS: <b>1–9</b> OPERATOR • <b>H</b> SCANNER</span>
+          <button type="button" class="arcade-btn amber" id="hint-btn" onclick="useShield()">🛡️ SCANNER (2)</button>
+        </div>
+      </div>
+
+      <!-- Start / Attract Screen -->
+      <div id="start-screen" class="overlay">
+        <div class="coin-blink">★ INSERT COIN / FREE PLAY ★</div>
+        <h2>DISARM THE LOGIC LOCK</h2>
+        <div class="rules-list">
+          1. Click (or press <b>1–9</b>) the <b>next valid operator</b> per PEMDAS.<br />
+          2. Solve that single gate to collapse the circuit funnel.<br />
+          3. Beware Left-to-Right &amp; stacked exponent traps! Bad cuts cost <b>-5s</b>.
+        </div>
+
+        <div class="tier-selector">
+          <div class="tier-card selected" data-tier="standard" onclick="selectTier('standard')">
+            <div class="tier-title">
+              <span>STANDARD</span>
+              <span>1.0× PTS</span>
+            </div>
+            <div class="tier-desc">
+              Warm-up locks followed by infinite 3–4 operator circuits. Positive numbers, single parentheses, and tie-breaker traps.
+            </div>
+          </div>
+
+          <div class="tier-card" data-tier="hardcore" onclick="selectTier('hardcore')">
+            <div class="tier-title">
+              <span>HARDCORE</span>
+              <span>1.5× PTS</span>
+            </div>
+            <div class="tier-desc">
+              Infinite 4–6 operator locks with nested parentheses, negative values, chained division, and stacked exponents (2 ^ 3 ^ 2).
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="arcade-btn pink" onclick="startGame()">▶ INSERT COIN / START</button>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="game-over-screen" class="overlay" style="display: none;">
+        <h2 style="color: var(--neon-red); text-shadow: 0 0 12px rgba(255,49,49,0.8);">SYSTEM DETONATED</h2>
+        <div class="new-record-banner" id="new-record-banner">★ NEW HIGH SCORE RECORD! ★</div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>FINAL SCORE</span>
+            <strong id="final-score">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>BEST STREAK</span>
+            <strong id="final-streak" style="color: var(--neon-green);">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>LOCKS DEFUSED</span>
+            <strong id="final-defused" style="color: var(--neon-amber);">0</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+          <button type="button" class="arcade-btn green" onclick="startGame()">▶ PLAY AGAIN</button>
+          <button type="button" class="arcade-btn" onclick="returnToMenu()">MODE SELECT</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Lower Cabinet Coin Door Strip -->
+  <div class="cabinet-footer">
+    <span>CREDITS: 99</span>
+    <div class="coin-slot">25¢ PUSH TO REJECT</div>
+    <span id="best-streak-footer">TOP STREAK: 0</span>
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // 1. RETRO ARCADE WEB AUDIO SYNTHESIZER (Zero External Audio Files)
+  // =========================================================================
+  const ArcadeAudio = (() => {
+    let ctx = null;
+    let muted = false;
+
+    function ensureContext() {
+      if (!ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) ctx = new AudioCtx();
+      }
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume();
+      }
+    }
+
+    function playTone(freq, type, duration, delay = 0, gainPeak = 0.14, slideTo = null) {
+      if (muted) return;
+      ensureContext();
+      if (!ctx) return;
+
+      const start = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, start);
+      if (slideTo) {
+        osc.frequency.exponentialRampToValueAtTime(slideTo, start + duration);
+      }
+
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(gainPeak, start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(start);
+      osc.stop(start + duration + 0.02);
+    }
+
+    return {
+      isMuted: () => muted,
+      toggleMute: () => {
+        muted = !muted;
+        if (!muted) {
+          ensureContext();
+          playTone(660, "square", 0.08, 0, 0.1);
+        }
+        return muted;
+      },
+      coinStart: () => {
+        // Classic coin drop + power-up arpeggio
+        playTone(987.77, "square", 0.08, 0.0, 0.14);
+        playTone(1318.51, "square", 0.28, 0.08, 0.14);
+        playTone(523.25, "triangle", 0.09, 0.22, 0.12);
+        playTone(659.25, "triangle", 0.09, 0.30, 0.12);
+        playTone(783.99, "triangle", 0.09, 0.38, 0.12);
+        playTone(1046.50, "triangle", 0.22, 0.46, 0.14);
+      },
+      selectOp: () => {
+        // Tactile arcade microswitch blip
+        playTone(520, "square", 0.055, 0, 0.11, 880);
+      },
+      scanner: () => {
+        // High-tech radar sweep
+        playTone(440, "sine", 0.12, 0, 0.14, 1180);
+        playTone(880, "triangle", 0.14, 0.1, 0.12, 1320);
+      },
+      errorBuzz: () => {
+        // Heavy electric alarm thud
+        playTone(135, "sawtooth", 0.26, 0, 0.18, 65);
+        playTone(110, "square", 0.26, 0.03, 0.14, 55);
+      },
+      stepCollapse: (stepNumber = 1) => {
+        // Ascending laser-collapse chime per funnel step
+        const base = 420 + Math.min(stepNumber, 8) * 65;
+        playTone(base, "triangle", 0.11, 0, 0.15, base * 1.35);
+        playTone(base * 1.5, "square", 0.12, 0.06, 0.09);
+      },
+      defuseVictory: () => {
+        // Triumphant 4-note arcade fanfare
+        playTone(523.25, "square", 0.11, 0.0, 0.13);
+        playTone(659.25, "square", 0.11, 0.10, 0.13);
+        playTone(783.99, "square", 0.11, 0.20, 0.13);
+        playTone(1046.50, "square", 0.36, 0.30, 0.15);
+        playTone(523.25, "triangle", 0.36, 0.30, 0.14);
+      },
+      urgentTick: (urgentLevel = 1) => {
+        // Heartbeat / countdown beep in last 10 seconds
+        const freq = urgentLevel === 2 ? 960 : 740;
+        playTone(freq, "square", 0.045, 0, 0.08);
+      },
+      gameOver: () => {
+        // Descending power-down cadence
+        playTone(392.00, "sawtooth", 0.18, 0.0, 0.15);
+        playTone(349.23, "sawtooth", 0.18, 0.18, 0.15);
+        playTone(311.13, "sawtooth", 0.18, 0.36, 0.15);
+        playTone(261.63, "sawtooth", 0.45, 0.54, 0.16, 130);
+      }
+    };
+  })();
+
+  // =========================================================================
+  // 2. PARTICLE SPARKS & CONFETTI ENGINE
+  // =========================================================================
+  const fxCanvas = document.getElementById("fx-canvas");
+  const fxCtx = fxCanvas.getContext("2d");
+  let particles = [];
+
+  function resizeFxCanvas() {
+    fxCanvas.width = window.innerWidth;
+    fxCanvas.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resizeFxCanvas);
+  resizeFxCanvas();
+
+  function spawnSparkBurst(x, y, count = 28, palette = ["#00f0ff", "#39ff14", "#ffb700", "#ff2a85"]) {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+      const speed = 2.5 + Math.random() * 6.5;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2.2,
+        size: 3 + Math.random() * 4,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.02
+      });
+    }
+  }
+
+  function updateParticles() {
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.22; // gravity
+      p.vx *= 0.98;
+      p.life -= p.decay;
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      fxCtx.save();
+      fxCtx.globalAlpha = Math.max(0, p.life);
+      fxCtx.fillStyle = p.color;
+      fxCtx.shadowColor = p.color;
+      fxCtx.shadowBlur = 10;
+      fxCtx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      fxCtx.restore();
+    }
+    requestAnimationFrame(updateParticles);
+  }
+  requestAnimationFrame(updateParticles);
+
+  function spawnFloatingPopup(text, color = "#39ff14", targetEl = null) {
+    const el = document.createElement("div");
+    el.className = "float-popup";
+    el.textContent = text;
+    el.style.color = color;
+    el.style.textShadow = `0 0 10px ${color}`;
+
+    const rect = (targetEl || document.getElementById("workspace")).getBoundingClientRect();
+    el.style.left = `${rect.left + rect.width / 2 + (Math.random() * 60 - 30)}px`;
+    el.style.top = `${rect.top + rect.height / 2 - 10}px`;
+
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1080);
+  }
+
+  // =========================================================================
+  // 3. PERSISTENT HIGH SCORE & CABINET TOGGLES
+  // =========================================================================
+  const STORAGE_KEY_SCORE = "pemdas_arcade_highscore_v1";
+  const STORAGE_KEY_STREAK = "pemdas_arcade_beststreak_v1";
+
+  let highScore = Number(localStorage.getItem(STORAGE_KEY_SCORE)) || 0;
+  let allTimeBestStreak = Number(localStorage.getItem(STORAGE_KEY_STREAK)) || 0;
+  let crtEnabled = true;
+
+  function formatScore(val) {
+    return String(val).padStart(4, "0");
+  }
+
+  function syncPersistentHUD() {
+    document.getElementById("high-score").textContent = formatScore(highScore);
+    document.getElementById("best-streak-footer").textContent = `TOP STREAK: ${allTimeBestStreak}`;
+  }
+  syncPersistentHUD();
+
+  function toggleCRT() {
+    crtEnabled = !crtEnabled;
+    const screen = document.getElementById("crt-screen");
+    const btn = document.getElementById("crt-toggle");
+    screen.classList.toggle("crt-enabled", crtEnabled);
+    btn.classList.toggle("active", crtEnabled);
+    btn.textContent = crtEnabled ? "CRT: ON" : "CRT: OFF";
+    ArcadeAudio.selectOp();
+  }
+
+  function toggleSound() {
+    const isMuted = ArcadeAudio.toggleMute();
+    const btn = document.getElementById("sfx-toggle");
+    btn.classList.toggle("active", !isMuted);
+    btn.textContent = isMuted ? "SFX: OFF" : "SFX: ON";
+  }
+
+  // =========================================================================
+  // 4. GAME STATE & CURATED / PROCEDURAL EXPRESSION ENGINE
+  // =========================================================================
+  const STANDARD_CURATED = [
+    ["3", "+", "4", "×", "(", "2", "^", "2", "−", "1", ")"],
+    ["24", "÷", "6", "×", "2", "+", "5"],
+    ["18", "−", "3", "×", "(", "2", "+", "4", ")"],
+    ["(", "5", "+", "3", ")", "^", "2", "÷", "4", "−", "6"],
+    ["30", "−", "12", "÷", "3", "×", "2"],
+    ["4", "×", "(", "10", "−", "3", "^", "2", ")", "+", "9"],
+    ["16", "÷", "(", "2", "×", "4", ")", "+", "3", "^", "2"],
+    ["20", "−", "7", "+", "3", "×", "4"],
+    ["(", "9", "−", "4", ")", "×", "2", "^", "3", "÷", "5"],
+    ["50", "÷", "5", "÷", "2", "+", "6", "×", "3"]
+  ];
+
+  const HARDCORE_CURATED = [
+    ["2", "^", "3", "^", "2", "−", "12", "÷", "(", "8", "−", "4", ")"],
+    ["(", "10", "−", "(", "3", "+", "4", "×", "2", ")", ")", "×", "5", "+", "9"],
+    ["36", "÷", "3", "÷", "2", "×", "(", "4", "−", "7", ")", "+", "10"],
+    ["5", "−", "3", "×", "(", "2", "^", "3", "−", "11", ")", "÷", "3"],
+    ["(", "(", "12", "−", "18", ")", "÷", "3", "+", "5", ")", "^", "2", "−", "20"]
+  ];
+
+  let difficulty = "standard";
+  let tokens = [];
+  let score = 0;
+  let streak = 0;
+  let sessionBestStreak = 0;
+  let locksDefused = 0;
+  let stepsInCurrentLock = 0;
+  let timeLeft = 60;
+  const maxTime = 60;
+  let timerInterval = null;
+  let selectedOpIndex = null;
+  let shields = 2;
+  let deck = [];
+  let isTransitioning = false;
+  let lastUrgentSecond = 11;
+
+  const workspaceEl = document.getElementById("workspace");
+  const historyEl = document.getElementById("funnel-history");
+  const statusEl = document.getElementById("status-msg");
+  const solveForm = document.getElementById("solve-form");
+  const subExprLabel = document.getElementById("sub-expr-label");
+  const answerInput = document.getElementById("answer-input");
+  const hintBtn = document.getElementById("hint-btn");
+  const modeBadge = document.getElementById("mode-badge");
+
+  function selectTier(tier) {
+    difficulty = tier;
+    document.querySelectorAll(".tier-card").forEach((card) => {
+      card.classList.toggle("selected", card.dataset.tier === tier);
+    });
+    modeBadge.textContent = tier === "hardcore" ? "HARDCORE 1.5×" : "STANDARD 1.0×";
+    modeBadge.classList.toggle("hardcore", tier === "hardcore");
+    ArcadeAudio.selectOp();
+  }
+
+  function returnToMenu() {
+    clearInterval(timerInterval);
+    document.getElementById("game-over-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("start-screen").style.display = "block";
+    ArcadeAudio.selectOp();
+  }
+
+  function startGame() {
+    score = 0;
+    streak = 0;
+    sessionBestStreak = 0;
+    locksDefused = 0;
+    timeLeft = maxTime;
+    shields = 2;
+    isTransitioning = false;
+    lastUrgentSecond = 11;
+
+    if (difficulty === "standard") {
+      deck = [...STANDARD_CURATED].sort(() => Math.random() - 0.5);
+    } else {
+      deck = [...HARDCORE_CURATED].sort(() => Math.random() - 0.5);
+    }
+
+    ArcadeAudio.coinStart();
+    updateHUD();
+    updateShieldBtn();
+    updateTimerVisuals();
+
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("game-over-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "block";
+
+    loadNextExpression();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(tickTimer, 100);
+  }
+
+  function tickTimer() {
+    if (isTransitioning) return;
+    timeLeft = Math.max(0, timeLeft - 0.1);
+    updateTimerVisuals();
+
+    const ceilSec = Math.ceil(timeLeft);
+    if (ceilSec <= 10 && ceilSec > 0 && ceilSec < lastUrgentSecond) {
+      lastUrgentSecond = ceilSec;
+      ArcadeAudio.urgentTick(ceilSec <= 4 ? 2 : 1);
+    }
+
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }
+
+  function updateTimerVisuals() {
+    const ceilSec = Math.ceil(timeLeft);
+    const timeText = document.getElementById("time-text");
+    const bar = document.getElementById("timer-bar");
+    const led = document.getElementById("bomb-led");
+
+    timeText.textContent = ceilSec + "s";
+    const pct = (timeLeft / maxTime) * 100;
+    bar.style.width = pct + "%";
+
+    bar.classList.remove("warning", "critical");
+    led.classList.remove("warning", "critical");
+    timeText.classList.remove("danger");
+
+    if (pct <= 20 || ceilSec <= 10) {
+      bar.classList.add("critical");
+      led.classList.add("critical");
+      timeText.classList.add("danger");
+    } else if (pct <= 50) {
+      bar.classList.add("warning");
+      led.classList.add("warning");
+    }
+  }
+
+  function endGame() {
+    clearInterval(timerInterval);
+    ArcadeAudio.gameOver();
+
+    let isNewRecord = false;
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem(STORAGE_KEY_SCORE, String(highScore));
+      isNewRecord = true;
+    }
+    if (sessionBestStreak > allTimeBestStreak) {
+      allTimeBestStreak = sessionBestStreak;
+      localStorage.setItem(STORAGE_KEY_STREAK, String(allTimeBestStreak));
+    }
+    syncPersistentHUD();
+
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("final-score").textContent = formatScore(score);
+    document.getElementById("final-streak").textContent = sessionBestStreak;
+    document.getElementById("final-defused").textContent = locksDefused;
+    document.getElementById("new-record-banner").style.display = isNewRecord ? "block" : "none";
+    document.getElementById("game-over-screen").style.display = "block";
+  }
+
+  function loadNextExpression() {
+    isTransitioning = false;
+    stepsInCurrentLock = 0;
+    lastUrgentSecond = Math.min(11, Math.ceil(timeLeft));
+
+    if (deck.length > 0) {
+      tokens = [...deck.pop()];
+    } else {
+      tokens = generateProceduralExpression(difficulty);
+    }
+
+    historyEl.innerHTML = "";
+    selectedOpIndex = null;
+    solveForm.classList.remove("active");
+    statusEl.textContent = "SELECT FIRST OPERATOR TO CUT!";
+    statusEl.style.color = "var(--neon-cyan)";
+    renderTokens();
+  }
+
+  // Procedural Expression Generator (guaranteed integer division & clean steps)
+  function generateProceduralExpression(mode) {
+    const isHardcore = mode === "hardcore";
+    const targetOps = isHardcore ? randInt(4, 6) : randInt(3, 4);
+    let node = createLeaf(isHardcore ? randInt(-6, 12) : randInt(2, 12));
+
+    for (let step = 0; step < targetOps; step++) {
+      const opChoices = ["+", "−", "×", "÷", "^"];
+      let op = opChoices[randInt(0, opChoices.length - 1)];
+
+      if (op === "^") {
+        if (Math.abs(node.value) >= 2 && Math.abs(node.value) <= 5 && step < 2) {
+          const exp = randInt(2, 3);
+          const wrappedLeft = node.tokens.length > 1 ? ["(", ...node.tokens, ")"] : node.tokens;
+          node = {
+            tokens: [...wrappedLeft, "^", String(exp)],
+            value: Math.pow(node.value, exp)
+          };
+          continue;
+        } else {
+          op = ["+", "−", "×", "÷"][randInt(0, 3)];
+        }
+      }
+
+      if (op === "÷") {
+        const divisors = getCleanDivisors(node.value, isHardcore);
+        if (divisors.length > 0) {
+          const d = divisors[randInt(0, divisors.length - 1)];
+          const needsParens = node.tokens.length > 1 && hasLowPrecedence(node.tokens);
+          const leftToks = needsParens ? ["(", ...node.tokens, ")"] : node.tokens;
+          node = {
+            tokens: [...leftToks, "÷", String(d)],
+            value: node.value / d
+          };
+          continue;
+        } else {
+          op = ["+", "−", "×"][randInt(0, 2)];
+        }
+      }
+
+      if (op === "×") {
+        const mult = isHardcore ? randInt(-5, 6) || 3 : randInt(2, 6);
+        const needsParens = node.tokens.length > 1 && hasLowPrecedence(node.tokens);
+        const leftToks = needsParens ? ["(", ...node.tokens, ")"] : node.tokens;
+        if (Math.random() < 0.5) {
+          node = {
+            tokens: [...leftToks, "×", String(mult)],
+            value: node.value * mult
+          };
+        } else {
+          node = {
+            tokens: [String(mult), "×", ...leftToks],
+            value: mult * node.value
+          };
+        }
+        continue;
+      }
+
+      const rhs = isHardcore ? randInt(2, 15) : randInt(2, 12);
+      const wrapAnyway = isHardcore && node.tokens.length >= 3 && Math.random() < 0.35;
+      const leftToks = wrapAnyway ? ["(", ...node.tokens, ")"] : node.tokens;
+
+      if (op === "+") {
+        if (Math.random() < 0.5) {
+          node = {
+            tokens: [...leftToks, "+", String(rhs)],
+            value: node.value + rhs
+          };
+        } else {
+          node = {
+            tokens: [String(rhs), "+", ...leftToks],
+            value: rhs + node.value
+          };
+        }
+      } else {
+        if (!isHardcore && node.value - rhs < 0) {
+          const bigLeft = node.value + randInt(3, 12);
+          node = {
+            tokens: [String(bigLeft), "−", ...(node.tokens.length > 1 ? ["(", ...node.tokens, ")"] : node.tokens)],
+            value: bigLeft - node.value
+          };
+        } else {
+          node = {
+            tokens: [...leftToks, "−", String(rhs)],
+            value: node.value - rhs
+          };
+        }
+      }
+    }
+
+    if (isHardcore && Math.random() < 0.25) {
+      return ["2", "^", "3", "^", "2", "−", String(randInt(4, 15)), "+", String(randInt(2, 5)), "×", String(randInt(2, 4))];
+    }
+
+    return node.tokens;
+  }
+
+  function createLeaf(val) {
+    return { tokens: [String(val)], value: val };
+  }
+
+  function hasLowPrecedence(toks) {
+    let depth = 0;
+    for (const t of toks) {
+      if (t === "(") depth++;
+      else if (t === ")") depth--;
+      else if (depth === 0 && (t === "+" || t === "−")) return true;
+    }
+    return false;
+  }
+
+  function getCleanDivisors(val, allowNegative) {
+    const absVal = Math.abs(val);
+    if (absVal < 4) return [];
+    const divs = [];
+    for (let d = 2; d <= Math.min(12, Math.floor(absVal / 2)); d++) {
+      if (absVal % d === 0) {
+        divs.push(d);
+        if (allowNegative && Math.random() < 0.3) divs.push(-d);
+      }
+    }
+    return divs;
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // PEMDAS Operator Resolution (Right-to-Left for Exponents)
+  function getNextValidOperatorIndex(toks) {
+    let start = 0;
+    let end = toks.length - 1;
+    const openIdx = toks.lastIndexOf("(");
+    if (openIdx !== -1) {
+      start = openIdx + 1;
+      end = toks.indexOf(")", openIdx) - 1;
+    }
+
+    for (let i = end; i >= start; i--) {
+      if (toks[i] === "^") return i;
+    }
+    for (let i = start; i <= end; i++) {
+      if (toks[i] === "×" || toks[i] === "÷") return i;
+    }
+    for (let i = start; i <= end; i++) {
+      if (toks[i] === "+" || toks[i] === "−") return i;
+    }
+    return -1;
+  }
+
+  function renderTokens(highlightCenter = -1) {
+    workspaceEl.innerHTML = "";
+    let opCounter = 0;
+
+    tokens.forEach((tok, idx) => {
+      const el = document.createElement("div");
+      const isOp = ["+", "−", "×", "÷", "^"].includes(tok);
+
+      if (isOp) {
+        opCounter++;
+        el.className = "token op";
+        el.dataset.opNumber = String(opCounter);
+        el.textContent = tok;
+
+        const badge = document.createElement("span");
+        badge.className = "op-hotkey";
+        badge.textContent = opCounter;
+        el.appendChild(badge);
+
+        el.onclick = () => handleOperatorClick(idx);
+      } else if (tok === "(" || tok === ")") {
+        el.className = "token paren";
+        el.textContent = tok;
+      } else {
+        el.className = "token num";
+        const numVal = Number(tok);
+        el.textContent = numVal < 0 && idx > 0 && tokens[idx - 1] !== "(" ? `(${tok})` : tok;
+      }
+
+      if (
+        highlightCenter !== -1 &&
+        (idx === highlightCenter - 1 || idx === highlightCenter || idx === highlightCenter + 1)
+      ) {
+        el.classList.add("highlight");
+      }
+
+      workspaceEl.appendChild(el);
+    });
+  }
+
+  function handleOperatorClick(idx) {
+    if (isTransitioning) return;
+    const validIdx = getNextValidOperatorIndex(tokens);
+
+    if (idx !== validIdx) {
+      streak = 0;
+      timeLeft = Math.max(0, timeLeft - 5);
+      updateHUD();
+      updateTimerVisuals();
+      triggerShake();
+      ArcadeAudio.errorBuzz();
+      spawnFloatingPopup("-5s PENALTY!", "#ff3131");
+      statusEl.textContent = getMistakeFeedback(tokens, idx, validIdx);
+      statusEl.style.color = "var(--neon-red)";
+      return;
+    }
+
+    ArcadeAudio.selectOp();
+    selectedOpIndex = idx;
+    renderTokens(idx);
+
+    const leftVal = Number(tokens[idx - 1]) < 0 ? `(${tokens[idx - 1]})` : tokens[idx - 1];
+    const op = tokens[idx];
+    const rightVal = Number(tokens[idx + 1]) < 0 ? `(${tokens[idx + 1]})` : tokens[idx + 1];
+
+    statusEl.textContent = "GATE LOCKED! COMPUTE VALUE:";
+    statusEl.style.color = "var(--neon-amber)";
+    subExprLabel.textContent = `${leftVal} ${op} ${rightVal} =`;
+    solveForm.classList.add("active");
+    answerInput.value = "";
+    answerInput.focus();
+  }
+
+  function getMistakeFeedback(toks, clickedIdx, validIdx) {
+    const clickedOp = toks[clickedIdx];
+    const validOp = toks[validIdx];
+    const openIdx = toks.lastIndexOf("(");
+
+    if (openIdx !== -1) {
+      const closeIdx = toks.indexOf(")", openIdx);
+      if (clickedIdx < openIdx || clickedIdx > closeIdx) {
+        return "TRAP! CLEAR INNERMOST PARENTHESES FIRST (-5s)";
+      }
+    }
+    if (clickedOp === "^" && validOp === "^" && clickedIdx < validIdx) {
+      return "EXPONENT RULE! EVALUATE RIGHT → LEFT (-5s)";
+    }
+    if ((clickedOp === "×" || clickedOp === "÷") && (validOp === "×" || validOp === "÷") && clickedIdx > validIdx) {
+      return "TIE-BREAKER! MULTIPLY/DIVIDE LEFT → RIGHT (-5s)";
+    }
+    if ((clickedOp === "+" || clickedOp === "−") && (validOp === "+" || validOp === "−") && clickedIdx > validIdx) {
+      return "TIE-BREAKER! ADD/SUBTRACT LEFT → RIGHT (-5s)";
+    }
+    return `WRONG WIRE! '${validOp}' EXECUTES BEFORE '${clickedOp}' (-5s)`;
+  }
+
+  solveForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (selectedOpIndex === null || isTransitioning) return;
+
+    const a = Number(tokens[selectedOpIndex - 1]);
+    const op = tokens[selectedOpIndex];
+    const b = Number(tokens[selectedOpIndex + 1]);
+    const userAns = Number(answerInput.value);
+
+    let correctAns = 0;
+    if (op === "^") correctAns = Math.pow(a, b);
+    if (op === "×") correctAns = a * b;
+    if (op === "÷") correctAns = a / b;
+    if (op === "+") correctAns = a + b;
+    if (op === "−") correctAns = a - b;
+
+    if (Number.isNaN(userAns) || Math.abs(userAns - correctAns) > 1e-6) {
+      triggerShake();
+      ArcadeAudio.errorBuzz();
+      spawnFloatingPopup("-3s ERROR!", "#ff3131");
+      statusEl.textContent = `CALCULATION FAULT! CHECK ${a} ${op} ${b} (-3s)`;
+      statusEl.style.color = "var(--neon-red)";
+      timeLeft = Math.max(0, timeLeft - 3);
+      updateTimerVisuals();
+      answerInput.select();
+      return;
+    }
+
+    stepsInCurrentLock++;
+
+    // Record step into visual funnel above
+    const lineDiv = document.createElement("div");
+    lineDiv.className = "history-row";
+    lineDiv.textContent = formatTokensForDisplay(tokens);
+    historyEl.appendChild(lineDiv);
+
+    // Collapse [a, op, b] into [correctAns]
+    tokens.splice(selectedOpIndex - 1, 3, String(correctAns));
+    cleanupParentheses();
+
+    selectedOpIndex = null;
+    solveForm.classList.remove("active");
+
+    if (tokens.length === 1) {
+      isTransitioning = true;
+      streak++;
+      locksDefused++;
+      if (streak > sessionBestStreak) sessionBestStreak = streak;
+
+      const multiplier = difficulty === "hardcore" ? 1.5 : 1;
+      const bonus = Math.round((100 + streak * 25) * multiplier);
+      score += bonus;
+      timeLeft = Math.min(maxTime, timeLeft + 6);
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem(STORAGE_KEY_SCORE, String(highScore));
+        syncPersistentHUD();
+      }
+
+      if (streak % 3 === 0) {
+        shields++;
+        setTimeout(() => spawnFloatingPopup("+1 SCANNER SHIELD!", "#00f0ff"), 220);
+      }
+
+      updateHUD();
+      updateShieldBtn();
+      updateTimerVisuals();
+      renderTokens();
+
+      ArcadeAudio.defuseVictory();
+      const wsRect = workspaceEl.getBoundingClientRect();
+      spawnSparkBurst(wsRect.left + wsRect.width / 2, wsRect.top + wsRect.height / 2, 34);
+      spawnFloatingPopup(`+${bonus} PTS! +6s`, "#39ff14");
+
+      statusEl.textContent = `LOCK DEFUSED! OUTPUT = ${tokens[0]} (+${bonus} PTS)`;
+      statusEl.style.color = "var(--neon-green)";
+      setTimeout(loadNextExpression, 1300);
+    } else {
+      ArcadeAudio.stepCollapse(stepsInCurrentLock);
+      const stepPts = difficulty === "hardcore" ? 15 : 10;
+      score += stepPts;
+      updateHUD();
+      spawnFloatingPopup(`+${stepPts}`, "#00f0ff");
+
+      statusEl.textContent = "GATE COLLAPSED! CUT NEXT OPERATOR.";
+      statusEl.style.color = "var(--neon-cyan)";
+      renderTokens();
+    }
+  });
+
+  function formatTokensForDisplay(toks) {
+    return toks
+      .map((t, i) => {
+        const n = Number(t);
+        if (!Number.isNaN(n) && n < 0 && i > 0 && toks[i - 1] !== "(") {
+          return `(${t})`;
+        }
+        return t;
+      })
+      .join(" ");
+  }
+
+  function cleanupParentheses() {
+    for (let i = 0; i < tokens.length - 2; i++) {
+      if (tokens[i] === "(" && tokens[i + 2] === ")") {
+        const inner = tokens[i + 1];
+        tokens.splice(i, 3, inner);
+        i = -1;
+      }
+    }
+  }
+
+  function useShield() {
+    if (shields <= 0 || isTransitioning) return;
+    shields--;
+    updateShieldBtn();
+    ArcadeAudio.scanner();
+    spawnFloatingPopup("SCANNER LOCK-ON!", "#ffb700", hintBtn);
+
+    const validIdx = getNextValidOperatorIndex(tokens);
+    if (validIdx !== -1) {
+      handleOperatorClick(validIdx);
+    }
+  }
+
+  function updateShieldBtn() {
+    hintBtn.textContent = `🛡️ SCANNER (${shields})`;
+    hintBtn.disabled = shields <= 0;
+  }
+
+  function updateHUD() {
+    document.getElementById("score").textContent = formatScore(score);
+    document.getElementById("streak").textContent = streak;
+  }
+
+  function triggerShake() {
+    const cab = document.getElementById("cabinet");
+    cab.classList.remove("shake");
+    void cab.offsetWidth;
+    cab.classList.add("shake");
+  }
+
+  // Keyboard shortcuts: 1-9 selects operator left-to-right; H triggers PEMDAS Scanner
+  document.addEventListener("keydown", (e) => {
+    const gameVisible = document.getElementById("game-screen").style.display !== "none";
+    if (!gameVisible || isTransitioning) return;
+
+    if (document.activeElement === answerInput) {
+      if (e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        useShield();
+      }
+      return;
+    }
+
+    if (e.key.toLowerCase() === "h") {
+      e.preventDefault();
+      useShield();
+      return;
+    }
+
+    if (e.key >= "1" && e.key <= "9") {
+      const targetOpNum = Number(e.key);
+      let count = 0;
+      for (let i = 0; i < tokens.length; i++) {
+        if (["+", "−", "×", "÷", "^"].includes(tokens[i])) {
+          count++;
+          if (count === targetOpNum) {
+            e.preventDefault();
+            handleOperatorClick(i);
+            break;
+          }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>
