@@ -55,6 +55,9 @@ export function GameCard({
           <span className="cover-play">
             <Play size={20} fill="currentColor" />
           </span>
+          {/PEMDAS|order of operations/i.test(game.skill) ? (
+            <span className="algebra-a-mark" title="Algebra A" aria-label="Algebra A">a</span>
+          ) : null}
         </div>
         <div className="card-caption">
           <strong>{game.title}</strong>
