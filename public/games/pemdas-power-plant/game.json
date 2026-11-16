@@ -1,0 +1,11 @@
+{
+  "title": "PEMDAS Power Plant",
+  "short": "POWER PLANT",
+  "genre": "City power restoration",
+  "skill": "Order of operations (PEMDAS)",
+  "description": "Bring a dark city back to life. Select and solve each operation to restore eight districts, with guided practice and a harder challenge mode.",
+  "color": "#b8f36b",
+  "time": "10–15 min",
+  "classroom": ["Algebra 1A", "Individualized Instruction"],
+  "cover": "cover.svg"
+}

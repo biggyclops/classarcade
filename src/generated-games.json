@@ -35,6 +35,40 @@
   },
   {
     "id": 1002,
+    "title": "PEMDAS Defuser",
+    "short": "PEMDAS DEFUSER",
+    "genre": "Arcade math challenge",
+    "skill": "Order of operations (PEMDAS)",
+    "description": "Select the next correct operation and solve it step by step before the timer runs out. Choose Standard or Hardcore mode.",
+    "color": "#00f0ff",
+    "time": "5–10 min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Algebra 1B"
+    ],
+    "cover": "/games/pemdas-defuser/cover.svg",
+    "launchUrl": "/games/pemdas-defuser/index.html"
+  },
+  {
+    "id": 1003,
+    "title": "PEMDAS Power Plant",
+    "short": "POWER PLANT",
+    "genre": "City power restoration",
+    "skill": "Order of operations (PEMDAS)",
+    "description": "Bring a dark city back to life. Select and solve each operation to restore eight districts, with guided practice and a harder challenge mode.",
+    "color": "#b8f36b",
+    "time": "10–15 min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Individualized Instruction"
+    ],
+    "cover": "/games/pemdas-power-plant/cover.svg",
+    "launchUrl": "/games/pemdas-power-plant/index.html"
+  },
+  {
+    "id": 1004,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",
     "genre": "Tactical math game",
