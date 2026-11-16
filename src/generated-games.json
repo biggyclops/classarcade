@@ -17,6 +17,20 @@
     "launchUrl": "/games/metro-line-architect/index.html"
   },
   {
+    "id": 1005,
+    "title": "NEBULA STRIKE",
+    "short": "NEBULA STRIKE",
+    "genre": "Asteroids arcade shooter",
+    "skill": "Arcade recreation",
+    "description": "Pilot your interceptor through asteroid waves, build combos, and use hyperspace to escape danger. W or Up to thrust, A/D or Left/Right to rotate, Space to fire, and Shift for hyperspace.",
+    "color": "#71e8ff",
+    "time": "5–10 min",
+    "progress": 0,
+    "classroom": [],
+    "cover": "/games/nebula-strike/cover.svg",
+    "launchUrl": "/games/nebula-strike/index.html"
+  },
+  {
     "id": 1001,
     "title": "Launch Control: Operation Zero",
     "short": "OPERATION ZERO",

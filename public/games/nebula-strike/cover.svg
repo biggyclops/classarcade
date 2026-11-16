@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<defs><radialGradient id="bg"><stop stop-color="#172b58"/><stop offset="1" stop-color="#03040b"/></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="6"/></filter><linearGradient id="flame" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#22cfff" stop-opacity="0"/></linearGradient></defs>
+<path fill="url(#bg)" d="M0 0h1200v800H0z"/>
+<g fill="#c7eeff"><circle cx="112" cy="110" r="2"/><circle cx="280" cy="210" r="2"/><circle cx="730" cy="130" r="2"/><circle cx="1020" cy="290" r="3"/><circle cx="900" cy="690" r="2"/><circle cx="170" cy="620" r="3"/><circle cx="490" cy="95" r="2"/><circle cx="1100" cy="580" r="2"/></g>
+<g fill="#111b32" stroke="#6689ab" stroke-width="3"><path d="m150 320 70-60 80 20 35 80-40 80-100 10-65-65z"/><path d="m930 80 80-30 95 50 20 95-75 60-105-35-45-65z"/><path d="m880 485 55-35 50 20 25 60-45 50-65-20z"/></g>
+<g stroke="#65eaff" stroke-width="6" filter="url(#glow)"><path d="m600 175-60 150 60-30 60 30z" fill="none"/><path d="M600 90V45M600 5v-35"/></g>
+<path d="m600 175-60 150 60-30 60 30z" fill="#102b45" stroke="#bdf8ff" stroke-width="3"/><path d="m580 310 20 110 20-110" fill="url(#flame)"/>
+<text x="600" y="560" fill="#eafcff" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="100" letter-spacing="12">NEBULA</text><text x="600" y="670" fill="#71e8ff" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="100" letter-spacing="16">STRIKE</text><text x="600" y="725" fill="#9bb5d2" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" letter-spacing="6">ASTEROID INTERCEPTOR // 2097</text>
+</svg>

@@ -5,6 +5,10 @@ const root = path.resolve("public/games");
 const output = path.resolve("src/generated-games.json");
 const entries = await readdir(root, { withFileTypes: true }).catch(() => []);
 const games = [];
+// Retain saved favorites/progress when another folder is added to the library.
+const previous = JSON.parse(await readFile(output, "utf8").catch(() => "[]"));
+const previousIds = new Map(previous.map((game) => [game.launchUrl, game.id]));
+let nextId = Math.max(999, ...previous.map((game) => game.id)) + 1;
 
 for (const entry of entries.filter((item) => item.isDirectory() && !item.name.startsWith("_"))) {
   const folder = path.join(root, entry.name);
@@ -13,7 +17,7 @@ for (const entry of entries.filter((item) => item.isDirectory() && !item.name.st
     const manifest = JSON.parse(await readFile(path.join(folder, "game.json"), "utf8"));
     if (!manifest.title || !manifest.skill) throw new Error("title and skill are required");
     games.push({
-      id: 1000 + games.length,
+      id: previousIds.get(`/games/${entry.name}/index.html`) ?? nextId++,
       title: String(manifest.title),
       short: String(manifest.short || manifest.title).toUpperCase(),
       genre: String(manifest.genre || "Browser game"),
