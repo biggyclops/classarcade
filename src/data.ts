@@ -44,6 +44,7 @@ const conceptGames: Game[] = [
   {
     id: 2,
     title: "Graph Runner",
+    launchUrl: "/games/graph-runner/index.html",
     short: "GRAPH RUNNER",
     genre: "Futuristic parkour",
     skill: "Coordinate geometry",
@@ -145,3 +146,4 @@ export const concepts = [
     recommend: "Best for an experimental learning pathway",
   },
 ];
+
