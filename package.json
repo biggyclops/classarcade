@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "games:catalog": "node scripts/generate-game-catalog.mjs",
-    "dev": "npm run games:catalog && vite --host 0.0.0.0",
-    "build": "npm run games:catalog && tsc -b && vite build",
+    "dev": "npm run chapter:build && npm run games:catalog && node next-chapter/server/dev.mjs",
+    "build": "npm run chapter:build && npm run games:catalog && tsc -b && vite build",
     "test": "playwright test",
     "portable": "npm run build && node scripts/portable.mjs",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "chapter:build": "node scripts/build-next-chapter.mjs",
+    "chapter:test": "node --test next-chapter/model.test.mjs next-chapter/server/api.test.mjs",
+    "build:host": "npm run build && node scripts/build-chapter-server.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",
