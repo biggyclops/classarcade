@@ -1,0 +1,11 @@
+{
+  "title": "Graph Rescue",
+  "short": "GRAPH RESCUE",
+  "genre": "Drone rescue",
+  "skill": "Graphing slope-intercept equations",
+  "description": "Identify the slope and y-intercept, plot two points, and draw the flight path. Steer the rescue drone, collect coins, and upgrade it between missions.",
+  "color": "#58f6ff",
+  "time": "5–10 min",
+  "classroom": ["Algebra 1A", "Algebra 1B"],
+  "cover": "cover.webp"
+}

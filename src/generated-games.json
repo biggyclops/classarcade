@@ -1,5 +1,22 @@
 [
   {
+    "id": 1006,
+    "title": "Graph Rescue",
+    "short": "GRAPH RESCUE",
+    "genre": "Drone rescue",
+    "skill": "Graphing slope-intercept equations",
+    "description": "Identify the slope and y-intercept, plot two points, and draw the flight path. Steer the rescue drone, collect coins, and upgrade it between missions.",
+    "color": "#58f6ff",
+    "time": "5–10 min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Algebra 1B"
+    ],
+    "cover": "/games/graph-rescue/cover.webp",
+    "launchUrl": "/games/graph-rescue/index.html"
+  },
+  {
     "id": 1000,
     "title": "Metro Line Architect",
     "short": "METRO ARCHITECT",
