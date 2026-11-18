@@ -19,7 +19,7 @@ function makeGrid(){const g=$('grid');for(let i=-6;i<=6;i++){let p=point([i,0]),
 let effects=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let bridgeParts=null;
 function setMotion(){ $('world').classList.toggle('still',!effects);$('motion').textContent='Motion: '+(effects?'on':'off');$('motion').setAttribute('aria-pressed',String(effects)); }
-function runnerAt(p,t=0,phase='idle',direction=1){const [x,y]=p,g=$('runner');g.replaceChildren();g.setAttribute('transform',`translate(${x} ${y})`);el('ellipse',{cx:0,cy:6,rx:phase==='jump'?9:16,ry:3,fill:'#72f3e7',opacity:phase==='jump'?.12:.3},g);const f=phase==='run'?Math.floor(t*14)%4:phase==='land'?1:0;const squash=phase==='land'?1-Math.sin(t*Math.PI)*.15:1;const body=el('g',{transform:`scale(${direction} ${squash})`,class:'runner-sprite'},g);const sprite=el('svg',{x:-34,y:-61,width:68,height:68,viewBox:`${f*96} 0 96 96`,overflow:'hidden'},body);el('image',{href:'runner-cycle.webp',x:0,y:0,width:384,height:96},sprite);}
+function runnerAt(p,t=0,phase='idle',direction=1){const [x,y]=p,g=$('runner');g.replaceChildren();g.setAttribute('transform',`translate(${x} ${y})`);el('ellipse',{cx:0,cy:6,rx:phase==='jump'?9:16,ry:3,fill:'#72f3e7',opacity:phase==='fall'?0:phase==='jump'?.12:.3},g);const f=phase==='run'?Math.floor(t*14)%4:phase==='land'?1:0;const squash=phase==='land'?1-Math.sin(t*Math.PI)*.15:1;const body=el('g',{transform:`rotate(${phase==='fall'?direction*(20+75*t):0}) scale(${direction} ${squash})`,class:'runner-sprite'},g);const sprite=el('svg',{x:-34,y:-61,width:68,height:68,viewBox:`${f*96} 0 96 96`,overflow:'hidden'},body);el('image',{href:'runner-cycle.webp',x:0,y:0,width:384,height:96},sprite);}
 function createBridge(a,b){const g=$('bridge');g.replaceChildren();const parts={rails:[],panels:[],length:Math.hypot(b[0]-a[0],b[1]-a[1])};for(const [offset,width,color] of [[7,15,'#72f3e7'],[7,4,'url(#routeGrad)'],[-4,1.5,'#b8fff3'],[13,1,'#72f3e7']]){const rail=line(g,a[0],a[1]+offset,b[0],b[1]+offset,color,width,{'pathLength':1,'stroke-dasharray':1,'stroke-dashoffset':1,opacity:width===15?.12:.9});parts.rails.push(rail);}for(let i=0;i<20;i++){const t=i/20,u=(i+.8)/20,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;const xx=a[0]+(b[0]-a[0])*u,yy=a[1]+(b[1]-a[1])*u;parts.panels.push(el('polygon',{points:`${x},${y+3} ${xx},${yy+3} ${xx},${yy+11} ${x},${y+11}`,class:'bridge-panel',opacity:0},g));if(i%3===0)line(g,x,y-4,x,y+13,'#91fff0',1,{opacity:.22});}return parts;}
 function bridgeProgress(t){if(!bridgeParts)return;for(const rail of bridgeParts.rails)rail.setAttribute('stroke-dashoffset',1-t);bridgeParts.panels.forEach((p,i)=>p.setAttribute('opacity',t>(i+1)/20?.22:0));}
 function drawTrail(points){const g=$('trail');g.replaceChildren();if(!effects||points.length<2)return;el('polyline',{points:points.map(p=>p.join(',')).join(' '),fill:'none',stroke:'#72f3e7','stroke-width':3,'stroke-linecap':'round',opacity:.45},g);points.forEach((p,i)=>{if(i%3===0)el('circle',{cx:p[0],cy:p[1]-10,r:1.5,fill:'#bdfff5',opacity:(i+1)/points.length*.6},g);});}
@@ -27,14 +27,69 @@ function landingBurst(p,t){const g=$('landing');g.replaceChildren();if(!effects)
 
 function render(){const s=stages[index],o=$('objects');o.replaceChildren();$('bridge').replaceChildren();$('trail').replaceChildren();$('landing').replaceChildren();bridgeParts=null;for(const [p,c,name] of [[s.a,'#72f3e7','START'],[s.b,'#ff917d','LAND']]){const [x,y]=point(p);el('rect',{x:x-25,y:y+7,width:50,height:7,fill:c,rx:2},o);label(o,x,y+65,name,c,11);}const [tx,ty]=point(s.b);el('path',{d:`M ${tx} ${ty-15} l 10 12 -10 12 -10 -12 Z`,fill:'#ff917d'},o);if(isSlope()){for(const p of [s.a,s.b]){const [x,y]=point(p);label(o,x,y-44,`(${p[0]}, ${p[1]})`,'#fff',15);}}runnerAt(point(s.a),0,'idle',s.b[0]>=s.a[0]?1:-1);$('graphDesc').textContent=`Coordinate plane from negative 6 to positive 6 on both axes. Runner starts at (${s.a}). ${isSlope()?`Destination is (${s.b}).`:'Find the coordinates of the orange landing diamond.'}`;}
 function isSlope(){return $('mode').value==='slope'||($('mode').value==='campaign'&&index>=6);}
-function setup(){cancelAnimationFrame(frame);resetCamera();busy=false;solved=false;tries=0;usedHint=false;const s=stages[index],sl=isSlope();$('sectorCount').textContent=`${String(index+1).padStart(2,'0')} / ${stages.length}`;$('district').textContent=String(index+1).padStart(2,'0')+' · '+s.n;$('task').textContent=sl?'Build the skybridge':'Plot your landing';$('prompt').textContent=sl?'Find the slope from START to LAND. Enter the change in y (rise) and change in x (run).':'Read the orange landing point on the graph. Enter its x-coordinate and y-coordinate.';$('targetLabel').textContent=sl?'START → LAND':'YOUR START';$('target').textContent=sl?`(${s.a.join(', ')}) → (${s.b.join(', ')})`:`(${s.a.join(', ')})`;$('coordinateInputs').hidden=sl;$('slopeInputs').hidden=!sl;for(const k of ['x','y','rise','run']){$(k).value='';$(k).required=sl?['rise','run'].includes(k):['x','y'].includes(k);$(k).disabled=false;}$('submit').disabled=false;$('submit').hidden=false;$('hint').disabled=false;$('next').hidden=true;$('summary').hidden=true;$('feedback').textContent=sl?'Slope = change in y ÷ change in x. Keep the same point order.':'Start with x: move left or right. Then use y: move up or down.';$('progress').replaceChildren();stages.forEach((s,i)=>{const dot=document.createElement('span');dot.className=i<index?'done':i===index?'current':'';$('progress').appendChild(dot);});render();}
+function setup(){cancelAnimationFrame(frame);if(missCry){window.speechSynthesis.cancel();missCry=null;}resetCamera();busy=false;solved=false;tries=0;usedHint=false;const s=stages[index],sl=isSlope();$('sectorCount').textContent=`${String(index+1).padStart(2,'0')} / ${stages.length}`;$('district').textContent=String(index+1).padStart(2,'0')+' · '+s.n;$('task').textContent=sl?'Build the skybridge':'Plot your landing';$('prompt').textContent=sl?'Find the slope from START to LAND. Enter the change in y (rise) and change in x (run).':'Read the orange landing point on the graph. Enter its x-coordinate and y-coordinate.';$('targetLabel').textContent=sl?'START → LAND':'YOUR START';$('target').textContent=sl?`(${s.a.join(', ')}) → (${s.b.join(', ')})`:`(${s.a.join(', ')})`;$('coordinateInputs').hidden=sl;$('slopeInputs').hidden=!sl;for(const k of ['x','y','rise','run']){$(k).value='';$(k).required=sl?['rise','run'].includes(k):['x','y'].includes(k);$(k).disabled=false;}$('submit').disabled=false;$('submit').hidden=false;$('hint').disabled=false;$('next').hidden=true;$('summary').hidden=true;$('feedback').textContent=sl?'Slope = change in y ÷ change in x. Keep the same point order.':'Start with x: move left or right. Then use y: move up or down.';$('progress').replaceChildren();stages.forEach((s,i)=>{const dot=document.createElement('span');dot.className=i<index?'done':i===index?'current':'';$('progress').appendChild(dot);});render();}
 function hint(){if(busy||solved)return;const s=stages[index];if(!usedHint){usedHint=true;hints++;}if(isSlope()){$('feedback').textContent=`Rise: ${s.b[1]} − (${s.a[1]}) = ${s.b[1]-s.a[1]}. Run: ${s.b[0]} − (${s.a[0]}) = ${s.b[0]-s.a[0]}. Put rise over run.`;const a=point(s.a),b=point(s.b);line($('objects'),a[0],a[1],b[0],a[1],'#ffe09a',2,{'stroke-dasharray':'5 5'});line($('objects'),b[0],a[1],b[0],b[1],'#ffe09a',2,{'stroke-dasharray':'5 5'});}else{$('feedback').textContent=`From (0, 0), move ${Math.abs(s.b[0])} ${s.b[0]<0?'left':'right'}, then ${Math.abs(s.b[1])} ${s.b[1]<0?'down':'up'}. Answer order: (x, y).`;}}
 const cameraHome=[100,25,580,555];
 function resetCamera(){ $('graph').setAttribute('viewBox',cameraHome.join(' ')); }
 function followCamera(p,t){if(!effects){resetCamera();return;}const smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};const blend=smooth((t-.08)/.20)*(1-smooth((t-.88)/.12));const w=580-300*blend,h=555-287*blend;const cx=390+(p[0]-390)*blend,cy=302.5+(p[1]-28-302.5)*blend;$('graph').setAttribute('viewBox',`${cx-w/2} ${cy-h/2} ${w} ${h}`);}
 function animate(){const a=point(stages[index].a),b=point(stages[index].b),direction=b[0]>=a[0]?1:-1;const start=performance.now(),trail=[];bridgeParts=createBridge(a,b);function step(now){const t=effects?Math.min(1,(now-start)/4200):1;bridgeProgress(Math.min(1,t/.16));let travel=Math.max(0,Math.min(1,(t-.16)/.75));let phase=t<.16?'idle':t<.76?'run':t<.91?'jump':'land';let leap=t>=.76&&t<.91?Math.sin((t-.76)/.15*Math.PI)*23:0;const p=[a[0]+(b[0]-a[0])*travel,a[1]+(b[1]-a[1])*travel-leap];followCamera(p,t);runnerAt(p,t>=.91?(t-.91)/.09:t,phase,direction);if(t>.16&&t<.91&&effects){trail.push(p);if(trail.length>10)trail.shift();drawTrail(trail);}if(t>=.91){$('trail').replaceChildren();landingBurst(b,(t-.91)/.09);}if(t<1){frame=requestAnimationFrame(step);}else{resetCamera();$('landing').replaceChildren();runnerAt(b,0,'idle',direction);busy=false;$('next').hidden=false;$('next').focus();}}frame=requestAnimationFrame(step);}
 
-function submit(e){e.preventDefault();if(busy||solved)return;const s=stages[index],sl=isSlope(),keys=sl?['rise','run']:['x','y'];if(keys.some(k=>$(k).value.trim()===''))return;const a=Number($(keys[0]).value),b=Number($(keys[1]).value);if(!Number.isFinite(a)||!Number.isFinite(b))return;tries++;totalAttempts++;const dy=s.b[1]-s.a[1],dx=s.b[0]-s.a[0];const correct=sl?(b!==0&&Math.abs(a*dx-b*dy)<1e-8):(a===s.b[0]&&b===s.b[1]);if(!correct){$('feedback').textContent=sl?(b===0?'The run cannot be zero for these routes. Subtract the start x from the landing x.':'That slope misses the landing. Use the same order for both subtractions: landing minus start.'):(a===s.b[0]?'Your x-coordinate is right. Check the vertical y-position.':b===s.b[1]?'Your y-coordinate is right. Check the horizontal x-position.':'That route misses the platform. Read x across first, then y up or down.');return;}solved=true;busy=true;cleared++;const points=Math.max(40,100-(tries-1)*20-(usedHint?15:0));score+=points;$('score').textContent=score;$('feedback').textContent=sl?`Bridge connected! Slope = ${dy}/${dx}. +${points} points.`:`Landing locked at (${s.b.join(', ')})! +${points} points.`;$('submit').disabled=true;$('hint').disabled=true;keys.forEach(k=>$(k).disabled=true);animate();}
+let missCry=null;
+function scream(){
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+  const cry=new SpeechSynthesisUtterance('Noooooo!');
+  cry.lang='en-US';
+  cry.rate=.72;
+  cry.pitch=1.3;
+  cry.onend=cry.onerror=()=>{if(missCry===cry)missCry=null;};
+  missCry=cry;
+  window.speechSynthesis.speak(cry);
+}
+
+function animateMiss(stage,keys){
+  const startPoint=point(stage.a);
+  const direction=stage.b[0]>=stage.a[0]?1:-1;
+  const edgeX=startPoint[0]+direction*27;
+  const start=performance.now();
+  let falling=false;
+  busy=true;
+  $('submit').disabled=true;
+  $('hint').disabled=true;
+  keys.forEach(k=>$(k).disabled=true);
+
+  function step(now){
+    const elapsed=now-start;
+    if(effects&&elapsed<420){
+      runnerAt([startPoint[0]+direction*27*elapsed/420,startPoint[1]],elapsed/1000,'run',direction);
+      frame=requestAnimationFrame(step);
+      return;
+    }
+    if(!falling){
+      falling=true;
+      scream();
+      label($('landing'),edgeX,startPoint[1]-72,'Noooooo!','#ffb59b',22);
+    }
+    const fall=Math.max(0,Math.min(1,(elapsed-420)/950));
+    if(effects&&fall<1){
+      const bottom=cameraHome[1]+cameraHome[3]+90;
+      runnerAt([edgeX+direction*65*fall,startPoint[1]+(bottom-startPoint[1])*fall*fall],fall,'fall',direction);
+    }
+    if(elapsed<1370){
+      frame=requestAnimationFrame(step);
+      return;
+    }
+    $('landing').replaceChildren();
+    runnerAt(startPoint,0,'idle',direction);
+    busy=false;
+    $('submit').disabled=false;
+    $('hint').disabled=false;
+    keys.forEach(k=>$(k).disabled=false);
+    $(keys[0]).focus();
+  }
+  frame=requestAnimationFrame(step);
+}
+
+function submit(e){e.preventDefault();if(busy||solved)return;const s=stages[index],sl=isSlope(),keys=sl?['rise','run']:['x','y'];if(keys.some(k=>$(k).value.trim()===''))return;const a=Number($(keys[0]).value),b=Number($(keys[1]).value);if(!Number.isFinite(a)||!Number.isFinite(b))return;tries++;totalAttempts++;const dy=s.b[1]-s.a[1],dx=s.b[0]-s.a[0];const correct=sl?(b!==0&&Math.abs(a*dx-b*dy)<1e-8):(a===s.b[0]&&b===s.b[1]);if(!correct){$('feedback').textContent=sl?(b===0?'The run cannot be zero for these routes. Subtract the start x from the landing x.':'That slope misses the landing. Use the same order for both subtractions: landing minus start.'):(a===s.b[0]?'Your x-coordinate is right. Check the vertical y-position.':b===s.b[1]?'Your y-coordinate is right. Check the horizontal x-position.':'That route misses the platform. Read x across first, then y up or down.');animateMiss(s,keys);return;}solved=true;busy=true;cleared++;const points=Math.max(40,100-(tries-1)*20-(usedHint?15:0));score+=points;$('score').textContent=score;$('feedback').textContent=sl?`Bridge connected! Slope = ${dy}/${dx}. +${points} points.`:`Landing locked at (${s.b.join(', ')})! +${points} points.`;$('submit').disabled=true;$('hint').disabled=true;keys.forEach(k=>$(k).disabled=true);animate();}
 function next(){if(busy||!solved)return;if(index<stages.length-1){index++;setup();}else{$('next').hidden=true;$('summary').hidden=false;$('results').textContent=`${cleared} routes completed · ${score} points · ${totalAttempts} attempts · ${hints} hints used. Accuracy: ${Math.round(cleared/totalAttempts*100)}%.`;$('summary').scrollIntoView({behavior:'smooth',block:'nearest'});}}
 function restart(){cancelAnimationFrame(frame);stages=$('mode').value==='coordinates'?routes.slice(0,6):$('mode').value==='slope'?routes.slice(6):routes;index=0;score=0;totalAttempts=0;cleared=0;hints=0;$('score').textContent='0';setup();}
 $('answerForm').addEventListener('submit',submit);$('hint').onclick=hint;$('next').onclick=next;$('restart').onclick=restart;$('again').onclick=restart;$('mode').onchange=restart;$('motion').onclick=()=>{effects=!effects;setMotion();};setMotion();makeGrid();setup();
