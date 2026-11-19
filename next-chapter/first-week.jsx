@@ -1,4 +1,3 @@
-HEAD^:next-chapter/first-week.jsx
 import React, {useState} from 'react';
 
 const places = [
