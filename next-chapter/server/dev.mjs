@@ -1,0 +1,13 @@
+import{adapter}from'./sqlite-adapter.mjs';
+import http from 'node:http';
+import{DatabaseSync}from'node:sqlite';
+import{readFileSync,mkdirSync}from'node:fs';
+import{createServer}from'vite';
+import{api}from'./api.mjs';
+const args=process.argv.slice(2),pi=args.indexOf('--port'),port=pi>=0?Number(args[pi+1]):5173;
+mkdirSync('.nc-local',{recursive:true});
+const sqlite=new DatabaseSync('.nc-local/classroom.sqlite');
+if(!sqlite.prepare("SELECT name FROM sqlite_master WHERE name='nc_users'").get())sqlite.exec(readFileSync('next-chapter/server/schema.sql','utf8'));
+const DB=adapter(sqlite),vite=await createServer({server:{middlewareMode:true,allowedHosts:true},appType:'spa'});
+const server=http.createServer(async(req,res)=>{if(req.url.startsWith('/api/next-chapter')){try{const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=Buffer.concat(chunks),url='http://'+req.headers.host+req.url;const request=new Request(url,{method:req.method,headers:req.headers,...(body.length?{body}:{}),duplex:'half'});const out=await api(request,{DB,ADMIN_INVITE:process.env.NC_PREVIEW_INVITE,OWNER_EMAIL:process.env.NC_OWNER_EMAIL});res.writeHead(out.status,Object.fromEntries(out.headers));res.end(Buffer.from(await out.arrayBuffer()))}catch(e){console.error(e);res.writeHead(500);res.end('{"error":"Preview server failed"}')}}else vite.middlewares(req,res)});
+server.listen(port,'0.0.0.0',()=>console.log('Next Chapter preview listening on '+port));

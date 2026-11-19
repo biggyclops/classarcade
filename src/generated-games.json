@@ -49,6 +49,23 @@
   },
   {
     "id": 1001,
+    "title": "Next Chapter",
+    "short": "NEXT CHAPTER",
+    "genre": "Real-world life simulation",
+    "skill": "Careers, budgeting & independent living",
+    "description": "Build your first independent life. Explore careers, find a home, plan transportation, and make a budget work in the Dracut / Lowell area.",
+    "color": "#f17655",
+    "time": "One class or a semester",
+    "progress": 0,
+    "classroom": [
+      "Individual Instruction",
+      "Graduating Seniors"
+    ],
+    "cover": "/games/next-chapter/town.webp",
+    "launchUrl": "/games/next-chapter/index.html"
+  },
+  {
+    "id": 1002,
     "title": "Launch Control: Operation Zero",
     "short": "OPERATION ZERO",
     "genre": "Aerospace mission simulator",
@@ -65,7 +82,7 @@
     "launchUrl": "/games/operation-zero/index.html"
   },
   {
-    "id": 1002,
+    "id": 1003,
     "title": "PEMDAS Defuser",
     "short": "PEMDAS DEFUSER",
     "genre": "Arcade math challenge",
@@ -82,7 +99,7 @@
     "launchUrl": "/games/pemdas-defuser/index.html"
   },
   {
-    "id": 1003,
+    "id": 1004,
     "title": "PEMDAS Power Plant",
     "short": "POWER PLANT",
     "genre": "City power restoration",
@@ -99,7 +116,7 @@
     "launchUrl": "/games/pemdas-power-plant/index.html"
   },
   {
-    "id": 1004,
+    "id": 1005,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",
     "genre": "Tactical math game",
