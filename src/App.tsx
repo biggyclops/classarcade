@@ -199,7 +199,7 @@ export default function App() {
   );
   return (
     <MotionConfig reducedMotion={reduced ? "always" : "user"}>
-      <audio ref={edgeMatchRoar} src={asset("/games/edge-match-64/roar.mp3")} preload="auto" />
+      <audio ref={edgeMatchRoar} src={asset("/games/edge-match-64/showa-roar.mp3")} preload="auto" />
       <div
         className={`app immersive-edition concept-${concept} ${reduced ? "reduce-motion" : ""}`}
       >
