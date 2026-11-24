@@ -34,6 +34,35 @@ import { Artwork, GameCard, Dialog, Primary } from "./components";
 import { asset } from "./assets";
 const edgeMatchUrl = "/games/edge-match-64/index.html";
 
+const slopeBirdUrl = "/games/slope-bird/index.html";
+const slopeBirdCover = "/games/slope-bird/cover.webp";
+
+function SlopeBirdIntro({ onFinish }: { onFinish: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  const cover = asset(slopeBirdCover);
+  return (
+    <div className="slope-bird-intro">
+      <img
+        src={cover}
+        alt="Slope Bird"
+        onLoad={() => setLoaded(true)}
+        onError={onFinish}
+      />
+      {loaded && (
+        <>
+          <div className="slope-bird-wing-background" aria-hidden="true" />
+          <img
+            className="slope-bird-wing"
+            src={cover}
+            alt=""
+            onAnimationEnd={onFinish}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
 type Collection = { name: string; ids: number[] };
 type Modal = "settings" | "import" | "collection" | null;
 function saved<T>(key: string, fallback: T): T {
@@ -70,6 +99,7 @@ export default function App() {
   const [reduced, setReduced] = useState(() => saved("reduced", false));
   const [sound, setSound] = useState(() => saved("sound", false));
   const edgeMatchRoar = useRef<HTMLAudioElement>(null);
+  const [showSlopeBirdIntro, setSlopeBirdIntro] = useState(false);
   const [launch, setLaunch] = useState<Game | null>(null);
   const [collectionName, setCollectionName] = useState("");
   const [collectionError, setCollectionError] = useState("");
@@ -129,6 +159,10 @@ export default function App() {
     );
   }
   function openDetail(g: Game) {
+    if (g.launchUrl === slopeBirdUrl) {
+      play(g);
+      return;
+    }
     setDetail(g);
     const roar = edgeMatchRoar.current;
     if (g.launchUrl === edgeMatchUrl && roar) {
@@ -141,6 +175,7 @@ export default function App() {
   }
   function play(g: Game) {
     setRecent((x) => [g.id, ...x.filter((i) => i !== g.id)]);
+    setSlopeBirdIntro(g.launchUrl === slopeBirdUrl && !reduced);
     setLaunch(g);
     if (sound) {
       try {
@@ -971,7 +1006,9 @@ export default function App() {
             onClose={() => setLaunch(null)}
             className={launch.launchUrl ? "playable-dialog" : ""}
           >
-            {launch.launchUrl ? (
+            {launch.launchUrl === slopeBirdUrl && showSlopeBirdIntro ? (
+              <SlopeBirdIntro onFinish={() => setSlopeBirdIntro(false)} />
+            ) : launch.launchUrl ? (
               <div className="game-player">
                 <iframe
                   src={asset(launch.launchUrl)}

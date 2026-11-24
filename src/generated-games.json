@@ -151,6 +151,23 @@
     "launchUrl": "/games/pemdas-power-run/index.html"
   },
   {
+    "id": 1009,
+    "title": "Slope Bird",
+    "short": "SLOPE BIRD",
+    "genre": "Arcade",
+    "skill": "3.1 Relations and Functions",
+    "description": "Read tables, ordered pairs, and graphs to unlock 18 gates. Practice domain, range, and the vertical line test, then flap through each opening.",
+    "color": "#6ff2ce",
+    "time": "15+ min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Algebra 1B"
+    ],
+    "cover": "/games/slope-bird/cover.webp",
+    "launchUrl": "/games/slope-bird/index.html"
+  },
+  {
     "id": 1005,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",

@@ -1,0 +1,10 @@
+{
+  "title": "Slope Bird",
+  "genre": "Arcade",
+  "skill": "3.1 Relations and Functions",
+  "description": "Read tables, ordered pairs, and graphs to unlock 18 gates. Practice domain, range, and the vertical line test, then flap through each opening.",
+  "color": "#6ff2ce",
+  "time": "15+ min",
+  "classroom": ["Algebra 1A", "Algebra 1B"],
+  "cover": "cover.webp"
+}

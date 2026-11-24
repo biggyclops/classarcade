@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slope Bird</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101b2e;color:#f5fbff;font:16px system-ui,sans-serif}main{max-width:1060px;margin:auto;padding:clamp(14px,3vw,34px)}header{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:20px}h1{font-size:clamp(34px,6vw,68px);line-height:.93;margin:4px 0 0;letter-spacing:-.055em}h1 span{color:#6ff2ce}small{color:#a9c8d9;font-weight:750;text-transform:uppercase;letter-spacing:.12em}.meters{display:flex;gap:8px;flex-wrap:wrap;justify-content:end}.pill{border:1px solid #446075;border-radius:40px;padding:6px 12px;font-weight:700;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(240px,1fr);gap:14px;align-items:start}canvas{display:block;width:100%;height:auto;border:1px solid #446075;border-radius:18px;touch-action:manipulation}.panel{border:1px solid #446075;border-radius:18px;background:#17283e;padding:18px}.panel p{margin:8px 0 14px}h2{font-size:22px;margin:4px 0}.equation{font-size:clamp(23px,4vw,32px);font-weight:800;color:#6ff2ce;letter-spacing:-.045em}.actions{display:flex;gap:8px;flex-wrap:wrap}button,input{font:inherit;border-radius:9px;padding:9px 12px}button{border:1px solid #658197;background:#253e55;color:#fff;font-weight:750;cursor:pointer}button.primary{background:#6ff2ce;color:#102c31;border-color:#6ff2ce}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #ffe383;outline-offset:3px}input{width:85px;background:#101b2e;color:white;border:1px solid #658197}label{display:block;margin-bottom:6px;font-weight:750}output{display:block;min-height:3em;margin-top:12px;color:#fff3bf}#hintText{color:#b5e4f4}.flight{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:10px 0}.flight span{color:#bfd5e5;font-size:.9em}footer{color:#b4cadd;margin-top:14px;font-size:.9em}[hidden]{display:none!important}@media(max-width:730px){.layout{grid-template-columns:1fr}header{align-items:start}.panel{padding:14px}}
+
+.relation{margin:12px 0;color:#bff6ed;font-weight:750}
+.relation table{border-collapse:collapse;width:100%;text-align:center}
+.relation th,.relation td{border:1px solid #658197;padding:5px}
+#answer{width:min(100%,150px)}
+select{font:inherit;border-radius:9px;padding:9px;background:#101b2e;color:#fff;border:1px solid #658197}
+</style>
+</head>
+<body>
+<main>
+<header><div><small>3.1 • Relations and Functions</small><h1>Slope <span>Bird</span></h1></div><div class="meters"><div class="pill" id="score">0 / 18 gates</div><div class="pill" id="best">Best 0</div></div></header>
+<div class="layout">
+<section aria-label="Flight course">
+<canvas id="course" width="780" height="470" aria-label="Coordinate grid with your glider, a wall, and its opening"></canvas>
+<div class="flight"><span>Space, ↑, or tap the course to flap.</span><button id="flap" disabled>Flap ↑</button></div>
+</section>
+<section class="panel" aria-labelledby="heading">
+<small id="gate">Gate 1 / 18</small>
+<h2 id="heading">Find the opening</h2>
+<div id="problem">
+<div class="relation" id="relation"></div>
+<p id="prompt"></p>
+<form id="answerForm">
+<label for="answer" id="answerLabel">Your answer</label>
+<div class="actions"><input id="answer" type="text" autocomplete="off"><select id="choice" aria-label="Is the relation a function?" hidden><option value="">Choose</option><option value="yes">Yes</option><option value="no">No</option></select><button class="primary">Check</button><button type="button" id="hint">Hint</button></div>
+</form>
+<p id="hintText" hidden></p>
+</div>
+<div class="actions"><button id="launch" class="primary" hidden>Launch</button><button id="restart" type="button">New run</button></div>
+<output id="message" aria-live="polite"></output>
+</section>
+</div>
+<footer>Domain = inputs (x). Range = outputs (y). A function gives each input exactly one output.</footer>
+</main>
+<script>
+'use strict';
+const get = id => document.getElementById(id);
+const canvas = get('course');
+const ctx = canvas.getContext('2d');
+const colors = { mint:'#6ff2ce', gold:'#ffe383', ice:'#c6eaf2' };
+let gate, phase, question, gapHalfHeight, birdX, birdY, velocity, step, clock, previous;
+let best = 0;
+try { best = Number(localStorage.getItem('slope-wing-relations-best')) || 0; } catch {}
+const sx = x => 75+x*77;
+const sy = y => 231-y*28;
+const shown = n => String(n).replace('-', '−');
+
+const challenges = [
+  {kind:'table', pairs:[[1,-2],[3,4],[5,0]], x:3, y:4},
+  {kind:'pairs', pairs:[[2,-3],[4,1],[6,5]], x:2, y:-3},
+  {kind:'graph', pairs:[[1,3],[4,-2],[6,1]], x:4, y:-2},
+  {kind:'domain', pairs:[[2,3],[4,-2],[6,3]], x:4, y:-2},
+  {kind:'range', pairs:[[1,2],[3,2],[5,-4],[7,0]], x:5, y:-4},
+  {kind:'function', pairs:[[2,1],[4,1],[6,-3]], x:6, y:-3},
+  {kind:'function', pairs:[[1,0],[3,4],[3,-2],[6,1]], x:5, y:2},
+  {kind:'vertical', pairs:[[2,0],[4,3],[4,-3],[6,0]], x:4, y:0},
+  {kind:'table', pairs:[[0,4],[3,0],[5,-2],[7,-5]], x:7, y:-5},
+  {kind:'pairs', pairs:[[1,-5],[2,5],[5,-1],[6,0]], x:2, y:5},
+  {kind:'graph', pairs:[[1,-4],[2,2],[5,0],[7,5]], x:5, y:0},
+  {kind:'domain', pairs:[[0,-1],[2,4],[2,-3],[5,4],[7,0]], x:7, y:0},
+  {kind:'range', pairs:[[1,-5],[2,3],[4,0],[5,-5],[7,3]], x:4, y:0},
+  {kind:'function', pairs:[[0,-4],[3,-4],[3,-4],[5,2],[7,2]], x:3, y:-4},
+  {kind:'function', pairs:[[1,5],[2,0],[4,-3],[6,1],[2,5]], x:5, y:3},
+  {kind:'vertical', pairs:[[1,4],[2,-4],[4,4],[5,0],[7,0]], x:7, y:0},
+  {kind:'range', pairs:[[1,4],[1,-2],[3,0],[4,4],[6,-5],[7,-2]], x:6, y:-5},
+  {kind:'vertical', pairs:[[1,-4],[2,1],[3,5],[6,-2],[7,3],[3,0]], x:6, y:4}
+];
+const total = challenges.length;
+const prompts = {
+  table: x => 'Use the table. What is y when x = '+x+'?',
+  pairs: x => 'Use the ordered pairs. What is y when x = '+x+'?',
+  graph: x => 'Read the plotted points. What is y when x = '+x+'?',
+  domain: () => 'What is the domain? Enter the input values separated by commas.',
+  range: () => 'What is the range? Enter each different output once, separated by commas.',
+  function: () => 'Is this relation a function?',
+  vertical: () => 'Does this graph pass the vertical line test?'
+};
+const hints = {
+  table:'Find the given x in the left column. Read the y in the same row.',
+  pairs:'In (x, y), the first number is the input and the second is the output.',
+  graph:'Trace the wall’s x-value to its plotted point, then read its height.',
+  domain:'List the first number from each ordered pair.',
+  range:'List the second number from each pair. Include repeated outputs once.',
+  function:'Check whether any input is paired with two different outputs. Different inputs may share an output.',
+  vertical:'Imagine a vertical line sliding across the graph. If it touches two points at once, the graph fails the test.'
+};
+function isChoice(){return ['function','vertical'].includes(question.kind)}
+function answerControl(){return get(isChoice()?'choice':'answer')}
+function relationIsFunction(pairs){
+  const outputs = new Map();
+  for(const [x,y] of pairs){
+    if(outputs.has(x) && outputs.get(x)!==y) return false;
+    outputs.set(x,y);
+  }
+  return true;
+}
+function checkAnswer(){
+  const {kind,pairs,y}=question;
+  if(isChoice()) return get('choice').value===(relationIsFunction(pairs)?'yes':'no');
+  const input=get('answer').value.trim().replaceAll('−','-');
+  if(kind!=='domain' && kind!=='range') return /^[-+]?\d+(?:\.\d+)?$/.test(input) && Number(input)===y;
+  const values=input.replace(/^\{(.*)\}$/,'$1').split(',').map(value=>value.trim());
+  if(values.some(value=>!/^[-+]?\d+$/.test(value))) return false;
+  const expected=new Set(pairs.map(pair=>pair[kind==='domain'?0:1]));
+  return values.length===expected.size && new Set(values.map(Number)).size===expected.size && values.every(value=>expected.has(Number(value)));
+}
+function showRelation(){
+  const {kind,pairs}=question;
+  const relation=get('relation');
+  if(kind==='table'){
+    relation.innerHTML='<table aria-label="Input and output table"><thead><tr><th scope="col">x</th><th scope="col">y</th></tr></thead><tbody>'+
+      pairs.map(([x,y])=>'<tr><td>'+x+'</td><td>'+shown(y)+'</td></tr>').join('')+'</tbody></table>';
+  }else if(kind==='graph' || kind==='vertical'){
+    relation.textContent='Use the points on the flight grid.';
+  }else{
+    relation.textContent=pairs.map(([x,y])=>'('+x+', '+shown(y)+')').join('  ·  ');
+  }
+}
+function setMessage(text){get('message').textContent=text}
+function meters(){
+  get('score').textContent = gate+' / '+total+' gates';
+  get('best').textContent = 'Best '+best;
+}
+function setupGate(){
+  question = challenges[gate];
+  gapHalfHeight = gate < 8 ? 1.7 : gate < 13 ? 1.55 : 1.4;
+  phase = 'solve';
+  birdX=0;
+  birdY=0;
+  get('gate').textContent='Gate '+(gate+1)+' / '+total;
+  get('heading').textContent='Solve the gate';
+  showRelation();
+  get('prompt').textContent=prompts[question.kind](question.x);
+  get('answer').value='';
+  get('answer').hidden=isChoice();
+  get('answer').required=!isChoice();
+  get('choice').value='';
+  get('choice').hidden=!isChoice();
+  get('choice').required=isChoice();
+  get('answerLabel').hidden=isChoice();
+  get('answerLabel').textContent=['domain','range'].includes(question.kind)?'Your answer':'Opening height (y)';
+  get('hintText').hidden=true;
+  get('problem').hidden=false;
+  get('launch').hidden=true;
+  get('flap').disabled=true;
+  setMessage('Solve to reveal the opening.');
+  meters();
+}
+function newRun(){
+  gate=0;
+  setupGate();
+  answerControl().focus();
+}
+get('answerForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  if(phase!=='solve') return;
+  const {kind,pairs,y}=question;
+  if(!checkAnswer()){
+    setMessage('Try again. '+hints[kind]);
+    answerControl().focus();
+    return;
+  }
+  phase='ready';
+  birdY=y;
+  get('problem').hidden=true;
+  get('heading').textContent='Opening unlocked';
+  get('launch').textContent='Launch';
+  get('launch').hidden=false;
+  const feedback=isChoice() ? (relationIsFunction(pairs)
+    ? 'Each input has exactly one output. '
+    : 'One input has two different outputs. ') : 'Correct. ';
+  setMessage(feedback+'Launch and flap to stay near y = '+shown(y)+'.');
+  get('launch').focus();
+});
+get('hint').onclick=()=>{
+  get('hintText').textContent=hints[question.kind];
+  get('hintText').hidden=false;
+};
+get('restart').onclick=newRun;
+get('launch').onclick=()=>{
+  if(phase==='clear'){setupGate();answerControl().focus();return}
+  if(phase!=='ready') return;
+  phase='fly';
+  birdX=0;
+  birdY=question.y;
+  velocity=0;
+  step=(question.x+.72)/2.65;
+  get('launch').hidden=true;
+  get('flap').disabled=false;
+  get('flap').focus();
+  get('heading').textContent='Fly through';
+  setMessage('Aim for y = '+shown(question.y)+'.');
+};
+function flap(){if(phase==='fly') velocity=3.5}
+get('flap').onclick=flap;
+canvas.addEventListener('pointerdown',flap);
+window.addEventListener('keydown',event=>{
+  if(phase==='fly' && (event.code==='Space'||event.code==='ArrowUp')){
+    event.preventDefault();
+    if(!event.repeat) flap();
+  }
+});
+
+function update(dt){
+  if(phase!=='fly') return;
+  birdX+=step*dt;
+  velocity-=6.8*dt;
+  birdY+=velocity*dt;
+  const distance=birdX-question.x;
+  const hitsWall=distance>-.19 && distance<.67 && Math.abs(birdY-question.y)>opening()-.28;
+  if(hitsWall || Math.abs(birdY)>7.4){
+    phase='ready';
+    get('flap').disabled=true;
+    get('launch').hidden=false;
+    get('launch').textContent='Retry flight';
+    get('heading').textContent='Try the flight again';
+    setMessage('Your answer is still correct. Flap a little sooner when the glider drops.');
+    get('launch').focus();
+    return;
+  }
+  if(distance>=.67){
+    gate++;
+    if(gate>best){
+      best=gate;
+      try {localStorage.setItem('slope-wing-relations-best',String(best))} catch {}
+    }
+    meters();
+    get('flap').disabled=true;
+    if(gate===total){
+      phase='done';
+      get('heading').textContent='Course complete!';
+      setMessage('You solved and flew through all '+total+' gates.');
+      get('restart').focus();
+    }else{
+      phase='clear';
+      get('heading').textContent='Gate cleared!';
+      setMessage('Ready for the next equation.');
+      get('launch').textContent='Next gate';
+      get('launch').hidden=false;
+      get('launch').focus();
+    }
+  }
+}
+function opening(){return gapHalfHeight}
+function line(x,y,xx,yy,color,width=1){
+  ctx.strokeStyle=color;ctx.lineWidth=width;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(xx,yy);ctx.stroke();
+}
+function label(text,x,y,color=colors.ice,size=15){
+  ctx.fillStyle=color;ctx.font='700 '+size+'px system-ui';ctx.fillText(text,x,y);
+}
+function background(){
+  const sky=ctx.createLinearGradient(0,0,0,470);
+  sky.addColorStop(0,'#101c3a');sky.addColorStop(.7,'#24536b');sky.addColorStop(1,'#477982');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,780,470);
+  for(let i=0;i<52;i++){
+    const x=(i*193+31)%780;
+    const y=(i*71+11)%290;
+    ctx.globalAlpha=.23+.25*(1+Math.sin(clock*1.1+i))/2;
+    ctx.fillStyle='#b8f7f5';ctx.fillRect(x,y,2,2);
+  }
+  ctx.globalAlpha=1;
+  for(let layer=0;layer<2;layer++){
+    ctx.fillStyle=layer?'#193c52':'#30647a';
+    ctx.beginPath();ctx.moveTo(0,470);
+    for(let x=0;x<=820;x+=20){
+      const h=layer?413:368;
+      ctx.lineTo(x,h+20*Math.sin(x*.012+layer)+18*Math.cos(x*.019+layer));
+    }
+    ctx.lineTo(780,470);ctx.fill();
+  }
+}
+function grid(){
+  for(let y=-7;y<=7;y++){
+    line(47,sy(y),757,sy(y),y===0?'#a9d3df':'#557d91',y===0?2:1);
+    label(shown(y),20,sy(y)+5);
+  }
+  for(let x=0;x<=8;x++){
+    line(sx(x),35,sx(x),427,x===0?'#a9d3df':'#557d91',x===0?2:1);
+    label(x,sx(x)-4,448);
+  }
+  label('y',20,23,colors.mint,17);
+  label('x',753,448,colors.mint,17);
+}
+function wall(){
+  const x=sx(question.x);
+  const top=sy(question.y+opening()), bottom=sy(question.y-opening());
+  const unlocked=phase!=='solve';
+  const metal=ctx.createLinearGradient(x,0,x+37,0);
+  metal.addColorStop(0,'#0f2039');metal.addColorStop(.42,'#416379');metal.addColorStop(1,'#1a334e');
+  ctx.fillStyle=metal;
+  ctx.fillRect(x,34,37,unlocked?top-34:393);
+  if(unlocked) ctx.fillRect(x,bottom,37,427-bottom);
+  ctx.fillStyle=unlocked?colors.mint:colors.gold;
+  if(unlocked){
+    ctx.fillRect(x-3,top-5,43,5);ctx.fillRect(x-3,bottom,43,5);
+    ctx.setLineDash([6,6]);
+    line(49,sy(question.y),750,sy(question.y),'#7af3cd',1.5);
+    ctx.setLineDash([]);
+    label('y = '+shown(question.y),x+47,sy(question.y)-9,colors.mint,17);
+  }else{
+    ctx.fillRect(x,34,4,393);
+  }
+  label('x = '+question.x,x-4,25,colors.gold,16);
+}
+function glider(){
+  const x=sx(birdX),y=sy(birdY);
+  ctx.save();ctx.translate(x,y);
+  if(phase==='fly')ctx.rotate(-velocity*.055);
+  const wing=6*Math.sin(clock*(phase==='fly'?22:5));
+  ctx.shadowColor='#6ff2ce';ctx.shadowBlur=14;
+  ctx.fillStyle='#6ff2ce';
+  ctx.beginPath();ctx.moveTo(21,0);ctx.lineTo(-13,10);ctx.lineTo(-6,0);ctx.lineTo(-15,-10);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#f2fff6';
+  ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-13,-16+wing);ctx.lineTo(-7,4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#153b54';ctx.beginPath();ctx.arc(12,-1,2.5,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+function frame(now){
+  const dt=Math.min(.032,(now-(previous??now))/1000);
+  previous=now;
+  clock+=dt;
+  update(dt);
+  background();grid();wall();
+  if(phase==='solve' && ['graph','vertical'].includes(question.kind)){
+    for(const [x,y] of question.pairs){
+      ctx.beginPath();ctx.arc(sx(x),sy(y),7,0,Math.PI*2);
+      ctx.fillStyle=colors.mint;ctx.fill();
+      ctx.strokeStyle='#101c3a';ctx.lineWidth=2;ctx.stroke();
+    }
+  }
+  glider();
+  requestAnimationFrame(frame);
+}
+clock=0;
+gate=0;
+setupGate();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
