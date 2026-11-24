@@ -32,6 +32,15 @@ import {
 import { games, classroomNames, Game } from "./data";
 import { Artwork, GameCard, Dialog, Primary } from "./components";
 import { asset } from "./assets";
+const laserDefenseUrl = "/games/slope-intercept-laser-defense/index.html";
+
+function gameFrameSource(path: string) {
+  const source = asset(path);
+  return path === laserDefenseUrl && !source.startsWith("data:")
+    ? `${source}?release=${__CLASSARCADE_VERSION__}`
+    : source;
+}
+
 const edgeMatchUrl = "/games/edge-match-64/index.html";
 
 const slopeBirdUrl = "/games/slope-bird/index.html";
@@ -1008,7 +1017,7 @@ export default function App() {
             ) : launch.launchUrl ? (
               <div className="game-player">
                 <iframe
-                  src={asset(launch.launchUrl)}
+                  src={gameFrameSource(launch.launchUrl)}
                   title={launch.title}
                   allow="fullscreen; autoplay"
                   sandbox={

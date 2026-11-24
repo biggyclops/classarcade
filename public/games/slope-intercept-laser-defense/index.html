@@ -891,6 +891,12 @@
     #campaign-status { margin: 8px 0; font-size: .85rem; line-height: 1.4; color: #d6f5ff; }
     #campaign-next { margin: 4px 0 8px; color: #042419; background: #6ee7b7; font-weight: 800; }
     #fire-btn:disabled { opacity: .55; cursor: default; }
+    #laser-welcome { color: #ecf8ff; background: #112638; border: 1px solid #527791; border-radius: 14px; padding: 22px; width: min(440px, 90%); }
+    #laser-welcome::backdrop { background: #081018c9; }
+    #laser-welcome h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    #laser-welcome p { line-height: 1.5; margin: 0 0 16px; }
+    #laser-welcome button { margin: 4px 6px 4px 0; padding: 9px 12px; }
+    #welcome-walkthrough { color: #052219; background: #6ee7b7; font-weight: 800; }
   </style>
 </head>
 <body>
@@ -1100,6 +1106,12 @@
     </div>
   </div>
 
+  <dialog id="laser-welcome" aria-labelledby="laser-welcome-title">
+    <h1 id="laser-welcome-title">Slope-Intercept Laser Defense</h1>
+    <p>Use slope and y-intercept to line up a beam through the drones.</p>
+    <button type="button" class="icon-btn" id="welcome-walkthrough" autofocus>Step-by-Step Walkthrough</button>
+    <button type="button" class="icon-btn" id="welcome-play">Start Missions</button>
+  </dialog>
   <script src="../fresh-problems.js"></script><script>
     /**
      * ============================================================================
@@ -2085,12 +2097,6 @@
           color: hitList.length >= 2 ? '#34d399' : '#38bdf8'
         });
 
-        if (guided && hitList.length !== targets.length) {
-          appendShotLog(eqPlain, hitList.length ? 'PARTIAL HIT' : 'MISSED', 'miss');
-          reportMiss(m, b, targets.filter(target => !hitList.includes(target)));
-          return;
-        }
-
         if (hitList.length > 0) {
           sfx.playHit(hitList.length);
           hitList.forEach((t) => {
@@ -2569,6 +2575,12 @@
           color: hitList.length >= 2 ? '#fbbf24' : '#34d399'
         });
 
+        if (guided && hitList.length !== targets.length) {
+          appendShotLog(eqPlain, hitList.length ? 'PARTIAL HIT' : 'MISSED', 'miss');
+          reportMiss(m, b, targets.filter(target => !hitList.includes(target)));
+          return;
+        }
+
         if (hitList.length > 0) {
           const comboMultiplier = hitList.length;
           sfx.playHit(comboMultiplier);
@@ -2724,6 +2736,16 @@
         updateMode();
         if (guided) startMission(0);
         else loadPreset(Number(presetSelect.value));
+      });
+      const welcome = $mission('laser-welcome');
+      $mission('welcome-walkthrough').addEventListener('click', () => {
+        welcome.close();
+        startDemoMode();
+        btnDemoNext.focus();
+      });
+      $mission('welcome-play').addEventListener('click', () => {
+        welcome.close();
+        inputRise.focus();
       });
       btnWatchDemo.addEventListener('click', () => {
         if (isDemoMode) exitDemoMode();
@@ -3352,6 +3374,7 @@
         resizeGrid();
         updateMode();
         startMission(0);
+        welcome.showModal();
         requestAnimationFrame(animate);
       };
     })();
