@@ -16,6 +16,11 @@ const baseFurniture = [
   {id:'desk', name:'Used desk', price:35, icon:'🪑'},
   {id:'lamp', name:'Reading lamp', price:20, icon:'💡'},
 ];
+const goals = [
+  {id:'move', name:'Move out with a friend', cost:1600},
+  {id:'car', name:'Save for a used car', cost:2400},
+  {id:'training', name:'Pay for career training', cost:750},
+];
 const keys = {
   ArrowUp:[0,-1], w:[0,-1], ArrowDown:[0,1], s:[0,1],
   ArrowLeft:[-1,0], a:[-1,0], ArrowRight:[1,0], d:[1,0],
@@ -24,7 +29,7 @@ function initial(previous) {
   const variants = [-2,-1,0,1,2].filter(value=>value!==previous);
   const priceOffset = variants[Math.floor(Math.random()*variants.length)];
   return {priceOffset,cash:500,position:places[0],place:'home',job:null,groceries:0,
-    shifts:0,paid:false,owned:[],color:'sage',done:false};
+    number:1,paid:false,extra:null,owned:[],furnitureSpend:0,color:'sage',goal:null,done:false};
 }
 const dollars = n => '$'+n.toLocaleString('en-US');
 
@@ -50,7 +55,8 @@ export default function FirstWeek({exit}) {
   const furniture = baseFurniture.map(item=>({...item,price:item.price+offset*5}));
   const food = [80+offset*5,120+offset*5];
   const job = jobs[week.job];
-  const objective = !job?'Visit the café or warehouse to accept a job.'
+  const objective = !job?'Compare the job offers and pick your first job.'
+    : week.number===2&&!week.goal?'Pick what you want to save for back at home.'
     : !week.groceries?'Buy a week of food at the grocery store.'
     : !week.paid?'Go to '+job.name+' and finish your shifts.'
     : 'Furnish your room or head home to finish the week.';
@@ -70,13 +76,29 @@ export default function FirstWeek({exit}) {
     if (key==='Enter') { event.preventDefault(); enter(); }
   }
 
-  function shift() {
+  const extraPay = job ? Math.round(job.pay / 4) - (job.commute / 4) : 0;
+  const goal = goals.find(option=>option.id===week.goal);
+
+  function travel(place) {
+    setWeek(w=>({...w,position:place,place:place.id}));
+  }
+
+  function acceptJob(id) {
+    setWeek(w=>w.job?w:{...w,job:id,cash:w.cash-jobs[id].commute});
+  }
+
+  function finishShifts(extra) {
     setWeek(w=>{
-      if (w.paid || !w.groceries || w.place!==w.job) return w;
-      const shifts = w.shifts+1;
-      const paid = shifts===4;
-      return {...w, shifts, paid, cash:w.cash+(paid?jobs[w.job].pay:0)};
+      if (w.paid || !w.groceries || w.place!==w.job || (w.number===2&&!w.goal)) return w;
+      return {...w,paid:true,extra,cash:w.cash+jobs[w.job].pay+(extra?extraPay:0)};
     });
+  }
+
+  function continueWeek() {
+    setWeek(w=>({
+      ...w,number:2,done:false,paid:false,extra:null,groceries:0,furnitureSpend:0,
+      cash:w.cash-jobs[w.job].commute,position:places[0],place:'home',
+    }));
   }
 
   function replay() {
@@ -105,15 +127,17 @@ export default function FirstWeek({exit}) {
 
   return <main className="week-shell">
     <button className="text-button" onClick={exit}>← Next Chapter</button>
-    <h1>First Week Challenge</h1>
+    <h1>{week.number===1?'First Week Challenge':'Week 2 · Your next goal'}</h1>
     {week.done?<section className="paper week-recap">
       <h2>You made it to payday</h2>
-      <p>{job.name} paid <strong>{dollars(job.pay)}</strong> after four shifts. You finished with <strong>{dollars(week.cash)}</strong>.</p>
-      <p>Food {dollars(week.groceries)} · Commute {dollars(job.commute)} · Furniture {dollars(furniture.filter(item=>week.owned.includes(item.id)).reduce((sum,item)=>sum+item.price,0))}</p>
+      <p>{job.name} paid <strong>{dollars(job.pay)}</strong> for four regular shifts{week.extra?<> plus {dollars(extraPay)} net for the extra shift</>:null}. You finished with <strong>{dollars(week.cash)}</strong>.</p>
+      <p>Food {dollars(week.groceries)} · Commute {dollars(job.commute)} · Furniture {dollars(week.furnitureSpend)}</p>
       {previous?<p>Last run: {previous.job}, {dollars(previous.cash)} left.</p>:null}
-      <p>Next goal: A {dollars(1600)} move-in fund. {week.cash<1600?dollars(1600-week.cash)+' to go.':'Goal reached.'}</p>
+      <p>{goal?<>{goal.name} · {dollars(goal.cost)} target. {week.cash<goal.cost?dollars(goal.cost-week.cash)+' to go.':'Goal reached!'}</>:'Keep your cash and furniture and choose a savings goal in Week 2.'}</p>
+      {week.extra===false?<p>You kept Friday night free.</p>:null}
       <div className="actions">
-        <button className="btn" onClick={replay}>Play again</button>
+        {week.number===1?<button className="btn" onClick={continueWeek}>Continue to Week 2</button>:null}
+        <button className="btn secondary" onClick={replay}>Play again</button>
         {formLink?<a className="btn secondary" href={formLink} target="_blank" rel="noopener noreferrer">Give feedback</a>
           : !sent&&!feedback?<button className="btn secondary" onClick={()=>setFeedback(true)}>Give feedback</button>:null}
       </div>
@@ -130,14 +154,23 @@ export default function FirstWeek({exit}) {
         <div className="actions"><button className="btn">Submit feedback</button><button className="btn secondary" type="button" onClick={()=>setFeedback(false)}>Skip survey</button></div>
       </form>:null}
     </section>:<>
-      <div className="week-status"><strong>{dollars(week.cash)} available</strong><span>Shifts {week.shifts} / 4</span><span>{week.groceries?'Food stocked':'Food needed'}</span></div>
+      <div className="week-status"><strong>{dollars(week.cash)} available</strong><span>{week.paid?'Payday complete':'Payday pending'}</span><span>{week.groceries?'Food stocked':'Food needed'}</span></div>
       <p className="lead" role="status">{objective}</p>
+      {!job?<section className="week-job-offers" aria-label="Compare job offers">
+        {Object.entries(jobs).map(([id,offer])=><article key={id} className="paper">
+          <h2>{offer.name}</h2>
+          <p>{id==='cafe'?'3–7 p.m. · Walk':'5–9 a.m. · Rides'}</p>
+          <p>Take-home pay {dollars(offer.pay)} · Commute {dollars(offer.commute)}</p>
+          <p><strong>{dollars(offer.pay-offer.commute)} after commute</strong></p>
+          <button className="btn" onClick={()=>acceptJob(id)}>Choose {offer.name}</button>
+        </article>)}
+      </section>:null}
       <div className="week-layout">
         <section className="paper">
           <h2>Town</h2>
-          <p id="week-help">Use WASD, arrow keys, or the movement buttons. Enter when you reach a building.</p>
+          <p id="week-help">Click a building to visit it, or move with WASD or the arrow keys and press Enter.</p>
           <div className="week-map" tabIndex={0} role="region" aria-label="Town map" aria-describedby="week-help" onKeyDown={mapKey}>
-            {places.map(place=><span key={place.id} className="week-place" style={{gridColumn:place.x+1,gridRow:place.y+1}}>{place.name}</span>)}
+            {places.map(place=><button type="button" key={place.id} className="week-place" aria-label={`Visit ${place.name}`} onClick={()=>travel(place)} style={{gridColumn:place.x+1,gridRow:place.y+1}}>{place.name}</button>)}
             <span className="week-player" aria-hidden="true" style={{gridColumn:week.position.x+1,gridRow:week.position.y+1}}>●</span>
           </div>
           <div className="week-directions" role="group" aria-label="Move around town">
@@ -149,6 +182,14 @@ export default function FirstWeek({exit}) {
         <section className="paper week-visit" aria-label="Current location">
           <h2>{places.find(place=>place.id===week.place)?.name||'On the way'}</h2>
           {week.place==='home'?<>
+            {week.number===2?<fieldset className="week-goals">
+              <legend>What are you saving for?</legend>
+              {goals.map(option=><label key={option.id}>
+                <input type="radio" name="week-goal" checked={week.goal===option.id}
+                  onChange={()=>setWeek(w=>({...w,goal:option.id}))}/>
+                {option.name} · {dollars(option.cost)}
+              </label>)}
+            </fieldset>:null}
             <p>You’re staying with family this week. Save toward a place of your own or make this room yours.</p>
             <div className={'week-room '+week.color} aria-label="Your furnished room">
               {week.owned.length?furniture.filter(item=>week.owned.includes(item.id)).map(item=><span key={item.id} role="img" aria-label={item.name}>{item.icon}</span>):<span>Your room is empty.</span>}
@@ -158,11 +199,16 @@ export default function FirstWeek({exit}) {
           </>:null}
           {jobs[week.place]?<>
             <p>{jobs[week.place].description} Take-home pay on Friday: {dollars(jobs[week.place].pay)}. Commute for the week: {dollars(jobs[week.place].commute)}.</p>
-            {!job?<button className="btn" onClick={()=>setWeek(w=>w.job?w:{...w,job:w.place,cash:w.cash-jobs[w.place].commute})}>Accept job</button>
+            {!job?<button className="btn" onClick={()=>acceptJob(week.place)}>Accept job</button>
               : week.job!==week.place?<p>You already accepted the {job.name} job.</p>
               : !week.groceries?<p>Stock up on food before your first shift.</p>
               : week.paid?<p role="status">Payday! You earned {dollars(job.pay)}.</p>
-              : <button className="btn" onClick={shift}>Work shift {week.shifts+1}</button>}
+              : week.number===2&&!goal?<p>Choose a savings goal at home first.</p>
+              : <div className="week-work-choice">
+                  <p>Your manager offers a Friday evening shift. Is the extra money worth giving up your evening?</p>
+                  <button className="btn" onClick={()=>finishShifts(true)}>Take extra shift · +{dollars(extraPay)} after travel</button>
+                  <button className="btn secondary" onClick={()=>finishShifts(false)}>Work regular shifts only</button>
+                </div>}
           </>:null}
           {week.place==='grocery'?week.groceries?<p>Your food is covered for the week.</p>:<>
             <p>Choose food for the week.</p>
@@ -171,7 +217,7 @@ export default function FirstWeek({exit}) {
           {week.place==='thrift'?<>
             <p>Take a look at what’s available for your room.</p>
             {furniture.map(item=><button className="btn secondary" key={item.id} disabled={week.owned.includes(item.id)||week.cash-item.price<(week.groceries?0:food[0])+(week.job?0:jobs.warehouse.commute)}
-              onClick={()=>setWeek(w=>({...w,cash:w.cash-item.price,owned:[...w.owned,item.id]}))}>
+              onClick={()=>setWeek(w=>({...w,cash:w.cash-item.price,furnitureSpend:w.furnitureSpend+item.price,owned:[...w.owned,item.id]}))}>
               {item.name} · {week.owned.includes(item.id)?'Owned':dollars(item.price)}
             </button>)}
             <p>Keep enough cash for food and travel until they’re covered.</p>

@@ -26,3 +26,16 @@
 .week-recap fieldset label { display: inline-flex; align-items: center; gap: .3rem; margin-right: 1rem; }
 .week-recap textarea { display: block; width: 100%; margin: .4rem 0; }
 @media (max-width: 740px) { .week-layout { grid-template-columns: 1fr; } }
+.week-start { margin-block: 1rem; }
+.week-start .btn { width: 100%; justify-content: center; }
+.week-job-offers { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem; margin-bottom: 1rem; }
+.week-job-offers h2, .week-job-offers p { margin: 0 0 .5rem; }
+.week-place { border: 1px solid #35654d; cursor: pointer; max-width: 100%; }
+.week-place:hover, .week-place:focus-visible { background: #d6eee0; }
+.week-player { pointer-events: none; }
+.week-work-choice .btn { margin: .25rem .25rem .25rem 0; }
+.week-goals label { display: flex; gap: .55rem; align-items: baseline; }
+.budget-fixes { margin-block: 1rem; padding-block: .65rem; border-block: 1px solid #b0c8b8; }
+.budget-fixes ol { padding-inline-start: 1.35rem; }
+.budget-fixes li + li { margin-top: .45rem; }
+@media (max-width: 460px) { .week-job-offers { grid-template-columns: 1fr; } }
