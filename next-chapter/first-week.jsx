@@ -16,6 +16,24 @@ const baseFurniture = [
   {id:'desk', name:'Used desk', price:35},
   {id:'lamp', name:'Reading lamp', price:20},
 ];
+const foodOptions = [
+  {id:'groceries', name:'Cook at home', description:'Bread, eggs, and fresh produce'},
+  {id:'prepared-meals', name:'Prepared meals', description:'Ready-to-heat entrées'},
+];
+function itemPhoto(id) {
+  return new URL(`./items/${id}.webp`, import.meta.url).href;
+}
+
+function ShopItem({item, children}) {
+  return <article className="week-shop-item">
+    <img src={itemPhoto(item.id)} alt="" width="240" height="170" />
+    <div>
+      {item.description?<p>{item.description}</p>:null}
+      {children}
+    </div>
+  </article>;
+}
+
 const goalIcons = {move:'🔑', car:'🚗', training:'🎓'};
 const startingSituations = [
   {cash:500, name:'Fresh start with family'},
@@ -343,7 +361,7 @@ export default function FirstWeek({exit}) {
             </label>:null}
             <p>{nextRent?'You’ve moved into your new apartment.':'You’re staying with family while you build toward your next goal.'}</p>
             <div className={'week-room '+week.color} role="group" aria-label="Your furnished room">
-              {week.owned.length?furniture.filter(item=>week.owned.includes(item.id)).map(item=><span key={item.id} className={`week-furniture week-furniture--${item.id}${week.layout[item.id]==='alternate'?' alternate':''}`} role="img" aria-label={item.name}/>):<span className="week-room-empty">Your room is empty</span>}
+              {week.owned.length?furniture.filter(item=>week.owned.includes(item.id)).map(item=><img key={item.id} className={`week-furniture week-furniture--${item.id}${week.layout[item.id]==='alternate'?' alternate':''}`} src={itemPhoto(item.id)} alt={item.name}/>):<span className="week-room-empty">Your room is empty</span>}
             </div>
             {week.owned.map(id=><label key={id} className="week-placement">{furniture.find(item=>item.id===id).name} placement
               <select value={week.layout[id]||'original'} onChange={e=>setWeek(w=>({...w,layout:{...w.layout,[id]:e.target.value}}))}>
@@ -383,14 +401,25 @@ export default function FirstWeek({exit}) {
           </>:null}
           {week.place==='grocery'?week.groceries?<p>Your food is covered for the week.</p>:<>
             <p>Choose food for the week.</p>
-            {food.map((price,index)=><button className="btn secondary" key={price} disabled={week.cash<price} onClick={()=>setWeek(w=>w.groceries||w.cash<price?w:{...w,cash:w.cash-price,groceries:price})}>{index===0?'Cook at home':'Prepared meals'} · {dollars(price)}</button>)}
+            <div className="week-shop-items">
+              {foodOptions.map((item,index)=><ShopItem key={item.id} item={item}>
+                <button className="btn secondary" disabled={week.cash<food[index]}
+                  onClick={()=>setWeek(w=>w.groceries||w.cash<food[index]?w:{...w,cash:w.cash-food[index],groceries:food[index]})}>
+                  {item.name} · {dollars(food[index])}
+                </button>
+              </ShopItem>)}
+            </div>
           </>:null}
           {week.place==='thrift'?<>
             <p>Take a look at what’s available for your room.</p>
-            {furniture.map(item=><button className="btn secondary" key={item.id} disabled={week.owned.includes(item.id)||week.cash-item.price<(week.groceries?0:food[0])+(week.job?0:jobs.warehouse.commute)}
-              onClick={()=>setWeek(w=>({...w,cash:w.cash-item.price,furnitureSpend:w.furnitureSpend+item.price,owned:[...w.owned,item.id]}))}>
-              {item.name} · {week.owned.includes(item.id)?'Owned':dollars(item.price)}
-            </button>)}
+            <div className="week-shop-items">
+              {furniture.map(item=><ShopItem key={item.id} item={item}>
+                <button className="btn secondary" disabled={week.owned.includes(item.id)||week.cash-item.price<(week.groceries?0:food[0])+(week.job?0:jobs.warehouse.commute)}
+                  onClick={()=>setWeek(w=>({...w,cash:w.cash-item.price,furnitureSpend:w.furnitureSpend+item.price,owned:[...w.owned,item.id]}))}>
+                  {item.name} · {week.owned.includes(item.id)?'Owned':dollars(item.price)}
+                </button>
+              </ShopItem>)}
+            </div>
             <p>Keep enough cash for food and travel until they’re covered.</p>
           </>:null}
           {!week.place?<p>{target?'You’re at '+target.name+'. Enter to go inside.':'Follow the map to your next stop.'}</p>:null}

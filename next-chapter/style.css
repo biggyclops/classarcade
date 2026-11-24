@@ -59,26 +59,38 @@
   border-radius: .35rem;
   font-size: .75rem;
 }
-.week-furniture { position: absolute; display: block; }
-.week-furniture--bed {
-  left: 43%; bottom: 13%; width: 40%; height: 24%;
-  background: linear-gradient(175deg,#f4e3d6 0 26%,#729692 27% 78%,#a36440 79%);
-  border: 2px solid #82543b;
-  border-radius: 20% 20% 7% 7%;
-  box-shadow: 0 5px 5px #45290555;
+.week-furniture {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 3px 3px #39291c66);
 }
-.week-furniture--desk {
-  left: 11%; bottom: 17%; width: 23%; height: 25%;
-  background: linear-gradient(90deg,#784b32 10%,transparent 10% 90%,#784b32 90%);
-  border-top: clamp(4px, 1.1vw, 10px) solid #a26740;
-  box-shadow: 0 -3px 0 #bb865a;
+.week-furniture--bed { left: 42%; bottom: 9%; width: 43%; height: 43%; }
+.week-furniture--desk { left: 10%; bottom: 16%; width: 25%; height: 39%; }
+.week-furniture--lamp { left: 24%; bottom: 45%; width: 11%; height: 20%; }
+.week-shop-items { display: grid; gap: .65rem; }
+.week-shop-item {
+  display: grid;
+  grid-template-columns: minmax(64px, 32%) minmax(0, 1fr);
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem;
+  border: 1px solid #dcd8cb;
+  border-radius: .65rem;
 }
-.week-furniture--lamp {
-  left: 29%; bottom: 42%; width: 9%; height: 17%;
-  background: linear-gradient(#f6d194 0 51%,#8a6036 52% 100%);
-  clip-path: polygon(23% 0,77% 0,100% 55%,56% 55%,56% 91%,77% 91%,77% 100%,23% 100%,23% 91%,44% 91%,44% 55%,0 55%);
-  filter: drop-shadow(0 0 6px #ffde83);
+.week-shop-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 24 / 17;
+  object-fit: contain;
+  background: #eee9de;
+  border-radius: .35rem;
+  padding: .25rem;
 }
+.week-shop-item p { margin: 0 0 .35rem; }
+.week-shop-item .btn { margin: 0; text-align: left; }
 .week-job-art {
   height: clamp(90px, 16vw, 165px);
   margin-bottom: .75rem;
@@ -150,11 +162,9 @@
 .week-player span { animation: week-step .15s ease-in-out 3 alternate; }
 @keyframes week-step { to { transform: translateY(-3px) rotate(-9deg); } }
 .week-placement { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .7rem; margin: .45rem 0; }
-.week-furniture--desk { border-radius: 6% 6% 0 0; box-shadow: 0 -3px 0 #bb865a, 0 4px 6px #472b2150; }
-.week-furniture--bed { background: linear-gradient(175deg,#ffe5c6 0 22%,#a47754 23% 30%,#65847a 31% 71%,#47665c 72% 79%,#ad7448 80%); }
 .week-furniture--desk.alternate { left: 67%; }
 .week-furniture--bed.alternate { left: 4%; }
-.week-furniture--lamp.alternate { left: 78%; }
+.week-furniture--lamp.alternate { left: 79%; }
 .week-interior { aspect-ratio: 16 / 8; background: url('./workplaces.webp') no-repeat; background-size: 200% 100%; border-radius: .65rem; margin: .7rem 0; }
 .week-interior--cafe { background-color: #a4683a; background-position: left center; }
 .week-interior--warehouse { background-color: #345968; background-position: right center; }
