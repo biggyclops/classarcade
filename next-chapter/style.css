@@ -135,3 +135,38 @@
 .budget-fixes ol { padding-inline-start: 1.35rem; }
 .budget-fixes li + li { margin-top: .45rem; }
 @media (max-width: 460px) { .week-job-offers { grid-template-columns: 1fr; } }
+
+.week-objective { padding: .7rem .9rem; margin: .5rem 0 1rem; border-left: 4px solid #287956; background: #f3eee0; }
+.week-objective small { display: block; color: #53675a; }
+.week-audio, .week-roommate { display: flex; align-items: baseline; gap: .5rem; }
+.week-roommate { margin: .6rem 0; }
+.week-place { min-height: 40px; line-height: 1.1; border-width: 2px; }
+.week-place span { display: block; font-size: 1rem; margin-bottom: .1rem; }
+.week-map button:nth-child(2) { background: #ffe9bc; border-color: #90571a; }
+.week-map button:nth-child(3) { background: #d1e7ec; border-color: #24586e; }
+.week-map button:nth-child(4) { background: #e2efca; border-color: #426425; }
+.week-map button:nth-child(5) { background: #f5dfe8; border-color: #8c536e; }
+.week-place:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.week-player span { animation: week-step .15s ease-in-out 3 alternate; }
+@keyframes week-step { to { transform: translateY(-3px) rotate(-9deg); } }
+.week-placement { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .7rem; margin: .45rem 0; }
+.week-furniture--desk { border-radius: 6% 6% 0 0; box-shadow: 0 -3px 0 #bb865a, 0 4px 6px #472b2150; }
+.week-furniture--bed { background: linear-gradient(175deg,#ffe5c6 0 22%,#a47754 23% 30%,#65847a 31% 71%,#47665c 72% 79%,#ad7448 80%); }
+.week-furniture--desk.alternate { left: 67%; }
+.week-furniture--bed.alternate { left: 4%; }
+.week-furniture--lamp.alternate { left: 78%; }
+.week-interior { aspect-ratio: 16 / 8; background: url('./workplaces.webp') no-repeat; background-size: 200% 100%; border-radius: .65rem; margin: .7rem 0; }
+.week-interior--cafe { background-color: #a4683a; background-position: left center; }
+.week-interior--warehouse { background-color: #345968; background-position: right center; }
+.week-event, .week-unlock { background: #f5eddf; border: 1px solid #e3d2bd; margin: .7rem 0; padding: .8rem; border-radius: .65rem; }
+.week-unlocks { display: grid; gap: .5rem; }
+.week-unlock { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; }
+.week-tour { flex-basis: 100%; }
+.week-tour-art { min-height: 85px; display: grid; place-items: center; font-size: 2.5rem; background: #dee8d8 url('./town.webp') center 35% / cover; border-radius: .55rem; }
+.week-tour--mill .week-tour-art { background-position: left 20%; background-size: 160%; }
+.week-tour--river .week-tour-art { background-position: right 20%; background-size: 160%; }
+.budget-comparison { margin-block: 1rem; }
+.budget-comparison caption { text-align: left; font-weight: 800; margin-bottom: .45rem; }
+.budget-comparison th, .budget-comparison td { white-space: normal; min-width: 100px; vertical-align: top; padding: .4rem .55rem; }
+.budget-comparison td:last-child { background: #eaf2e7; }
+@media (prefers-reduced-motion: reduce) { .week-player span { animation: none; } }
