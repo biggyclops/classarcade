@@ -18,17 +18,79 @@ main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12p
 <aside class="console"><div class="eyebrow">ACTIVE CONTROL SEQUENCE</div><div class="mission"><h1 id="title"></h1><span class="tag" id="skill"></span></div><p class="brief" id="brief"></p><div class="protocol"><span id="p0">P · GROUP</span><span id="p1">E · POWER</span><span id="p2">MD · LEFT→RIGHT</span><span id="p3">AS · LEFT→RIGHT</span></div><div class="expression" id="expression"></div><div class="instruction" id="instruction">SELECT THE OPERATION THAT MUST BE COMPLETED NEXT</div><div class="choices" id="choices"></div><div class="solve" id="solve"><label id="solveLabel">COMPUTE THE SELECTED OPERATION</label><div class="answer-row"><input id="answer" inputmode="decimal" aria-label="Step result" placeholder="Enter result"><button id="confirm">CONFIRM</button></div></div><div class="feedback" id="feedback" role="status">Follow the control protocol. One operation at a time.</div><div class="utility"><button id="hint">REQUEST FLIGHT DIRECTOR HINT</button><button id="reset">RESET CURRENT SYSTEM</button></div><button class="next" id="next">LOAD NEXT VEHICLE SYSTEM →</button><div class="mastery">The simulator scores operation selection and computation separately. Multiplication/division and addition/subtraction are evaluated left to right.</div></aside></main></div>
 <div class="overlay show" id="briefing"><div class="card"><div class="top"><span>RESTRICTED MISSION BRIEF</span><span>SIMULATION 03</span></div><h2>Operation Zero</h2><p>A launch vehicle is eight minutes from its window. Its control computer has lost the sequence rules for evaluating system codes.</p><div class="objective">Restore all eight systems by selecting the next valid operation, solving it, and reducing each expression step by step.</div><div class="mode-select"><button class="selected" id="standardMode">STANDARD</button><button id="hardMode">HARD MODE</button></div><p class="mode-note" id="modeNote">Guided protocol highlights, unlimited flight-director hints, and an 8-minute launch window.</p><button id="begin">ASSUME FLIGHT CONTROL</button></div></div>
 <div class="overlay" id="complete"><div class="card report"><div class="badge">✓</div><div class="eyebrow">LAUNCH AUTHORIZED</div><h2>Sequence Director</h2><p>You restored every system and demonstrated the complete order-of-operations protocol.</p><ul><li>Grouping symbols</li><li>Exponents</li><li>Multiply/divide left to right</li><li>Add/subtract left to right</li><li>Negative values</li><li>Mixed expressions</li></ul><button id="again">RUN A NEW SIMULATION</button></div></div>
-<script>
+<script src="../fresh-problems.js"></script><script>
 const missions=[
-{title:'Fuel Mixture Controller',skill:'DIVISION BEFORE ADDITION',brief:'Recover the oxidizer ratio without changing operations out of sequence.',rule:2,steps:[{expr:'4 + 10 ÷ 2',choices:['4 + 10','10 ÷ 2'],correct:'10 ÷ 2',answer:5,next:'4 + 5',hint:'Division must be completed before addition.'},{expr:'4 + 5',choices:['4 + 5'],correct:'4 + 5',answer:9,next:'9',hint:'Only addition remains.'}]},
-{title:'Booster Pressure Bus',skill:'MULTIPLICATION BEFORE SUBTRACTION',brief:'Stabilize pressure valves by applying multiplication before subtraction.',rule:2,steps:[{expr:'20 − 3 × 4',choices:['20 − 3','3 × 4'],correct:'3 × 4',answer:12,next:'20 − 12',hint:'Multiplication comes before subtraction.'},{expr:'20 − 12',choices:['20 − 12'],correct:'20 − 12',answer:8,next:'8',hint:'Complete the remaining subtraction.'}]},
-{title:'Guidance Power Array',skill:'EXPONENTS, THEN LEFT TO RIGHT',brief:'Rebuild the guidance voltage code. After the exponent, addition and subtraction proceed left to right.',rule:1,steps:[{expr:'15 − 2³ + 4',choices:['15 − 2','2³','2³ + 4'],correct:'2³',answer:8,next:'15 − 8 + 4',hint:'Evaluate the exponent before addition or subtraction.'},{expr:'15 − 8 + 4',choices:['15 − 8','8 + 4'],correct:'15 − 8',answer:7,next:'7 + 4',hint:'Addition and subtraction have equal rank, so work left to right.'},{expr:'7 + 4',choices:['7 + 4'],correct:'7 + 4',answer:11,next:'11',hint:'Complete the final addition.'}]},
-{title:'Containment Interlock',skill:'GROUPING SYMBOLS FIRST',brief:'The containment system requires the grouped calculation before outside operations.',rule:0,steps:[{expr:'6 − (5 − 3) + 10',choices:['6 − 5','5 − 3','3 + 10'],correct:'5 − 3',answer:2,next:'6 − 2 + 10',hint:'Everything inside parentheses must be completed first.'},{expr:'6 − 2 + 10',choices:['6 − 2','2 + 10'],correct:'6 − 2',answer:4,next:'4 + 10',hint:'Addition and subtraction are completed left to right.'},{expr:'4 + 10',choices:['4 + 10'],correct:'4 + 10',answer:14,next:'14',hint:'Complete the final addition.'}]},
-{title:'Thermal Shield Matrix',skill:'PARENTHESES → EXPONENT → DIVISION',brief:'Resolve a nested thermal calibration code before the shield overheats.',rule:0,steps:[{expr:'5 + (10 + 2 − 8)³ ÷ 2',choices:['5 + 10','10 + 2','8³','3 ÷ 2'],correct:'10 + 2',answer:12,next:'5 + (12 − 8)³ ÷ 2',hint:'Inside the parentheses, addition and subtraction go left to right.'},{expr:'5 + (12 − 8)³ ÷ 2',choices:['5 + 12','12 − 8','8³'],correct:'12 − 8',answer:4,next:'5 + 4³ ÷ 2',hint:'Finish the parentheses.'},{expr:'5 + 4³ ÷ 2',choices:['5 + 4','4³','3 ÷ 2'],correct:'4³',answer:64,next:'5 + 64 ÷ 2',hint:'Exponents come before division.'},{expr:'5 + 64 ÷ 2',choices:['5 + 64','64 ÷ 2'],correct:'64 ÷ 2',answer:32,next:'5 + 32',hint:'Division comes before addition.'},{expr:'5 + 32',choices:['5 + 32'],correct:'5 + 32',answer:37,next:'37',hint:'Complete the final addition.'}]},
-{title:'Main Engine Flow',skill:'MULTIPLY/DIVIDE LEFT TO RIGHT',brief:'Protect the turbopumps by processing equal-rank operations strictly from left to right.',rule:2,steps:[{expr:'18 × 2 ÷ 4 ÷ 3',choices:['18 × 2','2 ÷ 4','4 ÷ 3'],correct:'18 × 2',answer:36,next:'36 ÷ 4 ÷ 3',hint:'Multiplication and division have equal rank. Start on the left.'},{expr:'36 ÷ 4 ÷ 3',choices:['36 ÷ 4','4 ÷ 3'],correct:'36 ÷ 4',answer:9,next:'9 ÷ 3',hint:'Continue left to right.'},{expr:'9 ÷ 3',choices:['9 ÷ 3'],correct:'9 ÷ 3',answer:3,next:'3',hint:'Complete the final division.'}]},
-{title:'Cryogenic Temperature',skill:'NEGATIVE VALUES',brief:'A negative sensor value is part of the expression, not a new instruction.',rule:2,steps:[{expr:'12 − (−4) × 2 − 6',choices:['12 − (−4)','(−4) × 2','2 − 6'],correct:'(−4) × 2',answer:-8,next:'12 − (−8) − 6',hint:'Multiply the negative value before subtracting.'},{expr:'12 − (−8) − 6',choices:['12 − (−8)','(−8) − 6'],correct:'12 − (−8)',answer:20,next:'20 − 6',hint:'Subtracting a negative is the same as adding.'},{expr:'20 − 6',choices:['20 − 6'],correct:'20 − 6',answer:14,next:'14',hint:'Complete the final subtraction.'}]},
-{title:'Final Flight Computer',skill:'FULL PEMDAS SEQUENCE',brief:'One final mixed code stands between the vehicle and launch authorization.',rule:0,steps:[{expr:'3 × (8 − 2²) + 18 ÷ 3',choices:['3 × 8','2²','8 − 2'],correct:'2²',answer:4,next:'3 × (8 − 4) + 18 ÷ 3',hint:'Inside grouping symbols, evaluate the exponent first.'},{expr:'3 × (8 − 4) + 18 ÷ 3',choices:['3 × 8','8 − 4','18 ÷ 3'],correct:'8 − 4',answer:4,next:'3 × 4 + 18 ÷ 3',hint:'Finish the parentheses.'},{expr:'3 × 4 + 18 ÷ 3',choices:['3 × 4','4 + 18','18 ÷ 3'],correct:'3 × 4',answer:12,next:'12 + 18 ÷ 3',hint:'Multiplication and division come before addition; work left to right.'},{expr:'12 + 18 ÷ 3',choices:['12 + 18','18 ÷ 3'],correct:'18 ÷ 3',answer:6,next:'12 + 6',hint:'Complete division before addition.'},{expr:'12 + 6',choices:['12 + 6'],correct:'12 + 6',answer:18,next:'18',hint:'Complete the final addition.'}]}
+{title:'Fuel Mixture Controller',skill:'DIVISION BEFORE ADDITION',brief:'Recover the oxidizer ratio without changing operations out of sequence.',rule:2},
+{title:'Booster Pressure Bus',skill:'MULTIPLICATION BEFORE SUBTRACTION',brief:'Stabilize pressure valves by applying multiplication before subtraction.',rule:2},
+{title:'Guidance Power Array',skill:'EXPONENTS, THEN LEFT TO RIGHT',brief:'Rebuild the guidance voltage code. After the exponent, addition and subtraction proceed left to right.',rule:1},
+{title:'Containment Interlock',skill:'GROUPING SYMBOLS FIRST',brief:'The containment system requires the grouped calculation before outside operations.',rule:0},
+{title:'Thermal Shield Matrix',skill:'PARENTHESES → EXPONENT → DIVISION',brief:'Resolve a nested thermal calibration code before the shield overheats.',rule:0},
+{title:'Main Engine Flow',skill:'MULTIPLY/DIVIDE LEFT TO RIGHT',brief:'Protect the turbopumps by processing equal-rank operations strictly from left to right.',rule:2},
+{title:'Cryogenic Temperature',skill:'NEGATIVE VALUES',brief:'A negative sensor value is part of the expression, not a new instruction.',rule:2},
+{title:'Final Flight Computer',skill:'FULL PEMDAS SEQUENCE',brief:'One final mixed code stands between the vehicle and launch authorization.',rule:0}
 ];
+const operatorRank={'+':1,'−':1,'×':2,'÷':2,'^':3};
+const operatorHint=[
+  'Complete the operation inside the innermost parentheses first.',
+  'Add and subtract from left to right.',
+  'Multiply and divide from left to right.',
+  'Evaluate the exponent before multiplication, division, addition, or subtraction.'
+];
+function operationExpression(mission) {
+  const a=problemInteger(4,9), b=problemInteger(2,5), c=problemInteger(2,5), d=problemInteger(2,4);
+  return [
+    [a,'+',b*c,'÷',b],
+    [a+b*c,'−',b,'×',c],
+    [a+b**3,'−',b,'^',3,'+',c],
+    [a,'−','(',b+c,'−',c,')','+',d],
+    [a,'+','(',b+c,'+',d,'−',c+d-2,')','^',3,'÷',b+2],
+    [a*b,'×',c,'÷',b,'÷',c],
+    [a,'−',-b,'×',c,'−',d],
+    [a,'×','(',b*b+c,'−',b,'^',2,')','+',c*d,'÷',d]
+  ][mission];
+}
+function makeSteps(expression) {
+  const tokens=[...expression], steps=[];
+  const number=n=>n<0?`(−${-n})`:String(n);
+  const label=(a,op,b)=>op==='^'?`${number(a)}${b===2?'²':'³'}`:
+    [number(a),op,number(b)].join(' ');
+  const display=()=>{
+    const formatted=tokens.map(t=>typeof t==='number'?number(t):t);
+    return formatted.join(' ').replace(/ \^ 2/g,'²').replace(/ \^ 3/g,'³').replace(/\( /g,'(').replace(/ \)/g,')');
+  };
+  while(tokens.length>1) {
+    let depth=0;
+    const operations=[];
+    tokens.forEach((op,i)=>{
+      if(op==='(')depth++;
+      else if(op===')')depth--;
+      else if(operatorRank[op]) operations.push({i,op,depth,rank:operatorRank[op]});
+    });
+    operations.sort((a,b)=>b.depth-a.depth||b.rank-a.rank||a.i-b.i);
+    const {i,op,depth:group,rank}=operations[0];
+    const [a,,b]=tokens.slice(i-1,i+2);
+    const correct=label(a,op,b);
+    const choices=[...new Set([correct,...operations.filter(({i})=>
+      typeof tokens[i-1]==='number'&&typeof tokens[i+1]==='number')
+      .map(({i,op})=>label(tokens[i-1],op,tokens[i+1]))])];
+    const answer=op==='+'?a+b:op==='−'?a-b:op==='×'?a*b:op==='÷'?a/b:a**b;
+    const expr=display();
+    tokens.splice(i-1,3,answer);
+    for(let j=0;j<tokens.length-2;j++){
+      if(tokens[j]==='('&&typeof tokens[j+1]==='number'&&tokens[j+2]===')'){
+        tokens.splice(j,3,tokens[j+1]);
+        j=Math.max(-1,j-2);
+      }
+    }
+    steps.push({expr,choices,correct,answer,next:display(),hint:operatorHint[group?0:rank]});
+  }
+  return steps;
+}
+function newOperationRun() {
+  missions.forEach((mission,i)=>{
+    mission.steps=makeSteps(freshProblem('operation.'+i,()=>operationExpression(i)));
+  });
+}
 const $=s=>document.querySelector(s);let mi=0,si=0,selected=null,score=0,errors=0,hints=0,soundOn=true,audio,seconds=480,hardMode=false,hintUsed=false;
 const stackNames=['FUEL','BOOSTER','GUIDANCE','INTERLOCK','THERMAL','ENGINE','CRYO','FLIGHT'];
 $('#checkpoints').innerHTML=stackNames.map((name,i)=>`<div class="checkpoint" id="cp${i}"><i></i><span>0${i+1} · ${name}</span></div>`).join('');
@@ -42,5 +104,5 @@ function missionComplete(){score+=hardMode?400:250;const pct=Math.round((mi+1)/m
 function updateSystems(completed=mi,celebrate=false){const pct=Math.max(10,Math.round(completed/missions.length*100));['m1','m2','m3','m4'].forEach((id,i)=>{const val=Math.max(10,Math.min(100,pct-i*4));$('#'+id).style.width=val+'%';$('#v'+(i+1)).textContent=val+'%'});for(let i=0;i<missions.length;i++){const cp=$('#cp'+i);cp.classList.toggle('done',i<completed);cp.classList.toggle('current',i===completed&&completed<missions.length);cp.classList.remove('flash')}$('#stackFill').style.height=(completed/missions.length*100)+'%';$('#rocketMarker').style.transform=`translateY(${-Math.min(168,completed*21)}px)`;if(celebrate){const cp=$('#cp'+(completed-1));cp.classList.add('flash');setTimeout(()=>cp.classList.remove('flash'),800)}if(completed===missions.length)$('#view').classList.add('ready')}
 function next(){mi++;if(mi>=missions.length){$('#complete').classList.add('show');localStorage.setItem('oz-complete','1');return}loadMission()}
 function reset(){si=0;renderStep();$('#feedback').className='feedback';$('#feedback').textContent='Current system reset. No score penalty.'}
-$('#confirm').onclick=confirm;$('#answer').onkeydown=e=>{if(e.key==='Enter')confirm()};$('#hint').onclick=()=>{if(hardMode&&hintUsed){bad();$('#feedback').className='feedback bad';$('#feedback').textContent='Hard Mode permits one flight-director hint per system.';return}hints++;hintUsed=true;tone(700,.08);$('#feedback').className='feedback';$('#feedback').textContent='FLIGHT DIRECTOR: '+missions[mi].steps[si].hint};$('#reset').onclick=reset;$('#next').onclick=next;$('#sound').onclick=()=>{soundOn=!soundOn;$('#sound').textContent=soundOn?'SOUND ON':'SOUND OFF';if(soundOn)tone(520,.1)};$('#standardMode').onclick=()=>{hardMode=false;$('#standardMode').classList.add('selected');$('#hardMode').classList.remove('selected');$('#modeNote').textContent='Guided protocol highlights, unlimited flight-director hints, and an 8-minute launch window.'};$('#hardMode').onclick=()=>{hardMode=true;$('#hardMode').classList.add('selected');$('#standardMode').classList.remove('selected');$('#modeNote').textContent='No protocol highlights, one hint per system, a 5-minute window, and time penalties for errors.'};$('#begin').onclick=()=>{seconds=hardMode?300:480;loadMission();tone(360,.1);$('#briefing').classList.remove('show')};$('#again').onclick=()=>{mi=0;score=0;errors=0;hints=0;seconds=hardMode?300:480;$('#readiness').textContent='10%';$('#headProgress').style.width='0%';$('#complete').classList.remove('show');$('#view').className='view';$('#briefing').classList.add('show');loadMission()};setInterval(()=>{if(seconds>0)seconds--;const m=String(Math.floor(seconds/60)).padStart(2,'0'),s=String(seconds%60).padStart(2,'0');$('#clock').textContent=$('#countdown').textContent=`T−${m}:${s}`},1000);loadMission();
+$('#confirm').onclick=confirm;$('#answer').onkeydown=e=>{if(e.key==='Enter')confirm()};$('#hint').onclick=()=>{if(hardMode&&hintUsed){bad();$('#feedback').className='feedback bad';$('#feedback').textContent='Hard Mode permits one flight-director hint per system.';return}hints++;hintUsed=true;tone(700,.08);$('#feedback').className='feedback';$('#feedback').textContent='FLIGHT DIRECTOR: '+missions[mi].steps[si].hint};$('#reset').onclick=reset;$('#next').onclick=next;$('#sound').onclick=()=>{soundOn=!soundOn;$('#sound').textContent=soundOn?'SOUND ON':'SOUND OFF';if(soundOn)tone(520,.1)};$('#standardMode').onclick=()=>{hardMode=false;$('#standardMode').classList.add('selected');$('#hardMode').classList.remove('selected');$('#modeNote').textContent='Guided protocol highlights, unlimited flight-director hints, and an 8-minute launch window.'};$('#hardMode').onclick=()=>{hardMode=true;$('#hardMode').classList.add('selected');$('#standardMode').classList.remove('selected');$('#modeNote').textContent='No protocol highlights, one hint per system, a 5-minute window, and time penalties for errors.'};$('#begin').onclick=()=>{seconds=hardMode?300:480;loadMission();tone(360,.1);$('#briefing').classList.remove('show')};$('#again').onclick=()=>{newOperationRun();mi=0;score=0;errors=0;hints=0;seconds=hardMode?300:480;$('#readiness').textContent='10%';$('#headProgress').style.width='0%';$('#complete').classList.remove('show');$('#view').className='view';$('#briefing').classList.add('show');loadMission()};setInterval(()=>{if(seconds>0)seconds--;const m=String(Math.floor(seconds/60)).padStart(2,'0'),s=String(seconds%60).padStart(2,'0');$('#clock').textContent=$('#countdown').textContent=`T−${m}:${s}`},1000);newOperationRun();loadMission();
 </script></body></html>

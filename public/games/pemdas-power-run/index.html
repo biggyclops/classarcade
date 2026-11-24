@@ -19,7 +19,7 @@
 <p id="feedback" class="feedback" role="status"></p><button id="resume" class="primary" hidden>Keep running</button>
 </dialog>
 <dialog id="finish" aria-labelledby="finishTitle"><h2 id="finishTitle">Run complete!</h2><p id="summary"></p><button id="again" class="primary">Play again</button></dialog>
-<script>
+<script src="../fresh-problems.js"></script><script>
 'use strict';
 const $ = id => document.getElementById(id);
 const ctx = $('scene').getContext('2d');
@@ -163,7 +163,8 @@ function ask(block) {
   attempted++;
   keys.clear();
   jumpQueued = false;
-  const [question, answer, steps] = problem(level,blocks.indexOf(block));
+  const slot=blocks.indexOf(block);
+  const [question, answer, steps] = freshProblem(`run.${level}.${slot}`,()=>problem(level,slot));
   $('reward').textContent = 'Earn a ' + block.power.toLowerCase() + ' with a correct answer.';
   $('expression').textContent = question;
   $('feedback').textContent = '';

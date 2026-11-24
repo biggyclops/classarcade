@@ -1082,7 +1082,7 @@
     </div>
   </div>
 
-  <script>
+  <script src="../fresh-problems.js"></script><script>
     /**
      * ============================================================================
      * SECTION 3.1 SANDBOX - SLOPE-INTERCEPT LASER DEFENSE (y = mx + b)
@@ -1347,8 +1347,13 @@
         hintBox.classList.remove('visible');
         hintBox.innerHTML = '';
 
+        const points = [...spec.targets, ...spec.hazards];
+        const shift = points.length ? freshProblem('laser.' + idx, () =>
+          problemInteger(-9 - Math.min(...points.map(p => p.y)),
+            9 - Math.max(...points.map(p => p.y)))) : 0;
         targets = spec.targets.map((t, i) => ({
           ...t,
+          y: t.y + shift,
           id: `p-${idx}-${i}-${Date.now()}`,
           maxHp: t.hp || 1,
           pulse: Math.random() * Math.PI * 2
@@ -1356,6 +1361,7 @@
 
         hazards = spec.hazards.map((h, i) => ({
           ...h,
+          y: h.y + shift,
           id: `h-${idx}-${i}-${Date.now()}`,
           pulse: Math.random() * Math.PI * 2
         }));

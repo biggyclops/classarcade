@@ -62,14 +62,44 @@
 </div>
 <div class="briefing show" id="briefing"><div class="brief-card"><div class="brief-top"><span>CONFIDENTIAL TRANSIT CONTRACT</span><span id="briefNo">01 / 05</span></div><h2 id="briefTitle">River District Connector</h2><p id="briefCopy"></p><div class="brief-objective" id="briefObjective"></div><button id="begin">BEGIN CITY SURVEY</button></div></div>
 <div class="complete" id="complete"><div class="complete-card"><div class="seal">✓</div><div class="eyebrow">CITY NETWORK CERTIFIED</div><h2>Senior Route Architect</h2><p>You completed five contracts using slope-intercept form from engineering specifications, graphs, one point, two points, and a horizontal route.</p><button id="again">Replay contracts</button></div></div>
-<script>
-const missions=[
+<script src="../fresh-problems.js"></script><script>
+const missionTemplates=[
  {title:'River District Connector',skill:'GIVEN m & b',brief:'The engineering team has approved the grade and downtown crossing. Translate the specification into a route equation.',intel:'APPROVED SPECIFICATION\nSlope m = 2\nY-intercept b = 1',m:2,b:1,stations:[[-2,-3],[0,1],[2,5]],hint:'The equation is already specified: substitute m = 2 and b = 1 into y = mx + b.'},
  {title:'Crosstown Survey',skill:'READ THE MAP',brief:'Survey markers reveal a descending route. Use the station coordinates on the map to determine its equation.',intel:'MAP SURVEY\nStations: (-2, 5), (1, 2), (3, 0)\nFind both m and b.',m:-1,b:3,stations:[[-2,5],[1,2],[3,0]],hint:'From (-2,5) to (1,2), rise = -3 and run = 3, so m = -1. Then use y = mx + b.'},
  {title:'Harbor Extension',skill:'SLOPE + ONE POINT',brief:'The environmental grade is fixed. Find the intercept that makes the route pass through the approved harbor station.',intel:'GRADE m = 1/2\nAPPROVED STATION (2, 3)\nSolve for b.',m:.5,b:2,stations:[[-4,0],[2,3],[4,4]],hint:'Substitute the point into y = mx + b: 3 = (1/2)(2) + b.'},
  {title:'North Loop Express',skill:'TWO POINTS',brief:'Two major stations are approved. Calculate the slope between them, then determine where the line crosses the y-axis.',intel:'TERMINALS\nWest: (-3, -2)\nCentral: (1, 6)',m:2,b:4,stations:[[-3,-2],[0,4],[1,6]],hint:'First calculate m = (6 - (-2)) / (1 - (-3)). Then substitute either point to solve for b.'},
  {title:'Airport Level Line',skill:'ZERO SLOPE',brief:'Airport regulations require a perfectly level route. Build the horizontal line through all three terminals.',intel:'AIRPORT TERMINALS\n(-4, -3), (0, -3), (4, -3)',m:0,b:-3,stations:[[-4,-3],[0,-3],[4,-3]],hint:'A horizontal line has slope 0. Its equation is y = b, using the shared y-coordinate.'}
 ];
+function makeMetroMissions() {
+  return missionTemplates.map((template,i)=>{
+    const slopes=[[1,2],[-1,-2], [.5,-.5],[1,2,-1,-2],[0]][i];
+    const [m,b]=freshProblem('metro.'+i,()=>{
+      const m=slopes[problemInteger(0,slopes.length-1)];
+      const offsets=template.stations.map(([x])=>m*x);
+      return [m,problemInteger(-5-Math.min(...offsets),5-Math.max(...offsets))];
+    });
+    const stations=template.stations.map(([x])=>[x,m*x+b]);
+    const point=([x,y])=>`(${x}, ${y})`;
+    const slope=Number.isInteger(m)?String(m):(m<0?'−1/2':'1/2');
+    const [a,c,d]=stations.map(point);
+    const intel=[
+      `APPROVED SPECIFICATION\nSlope m = ${slope}\nY-intercept b = ${b}`,
+      `MAP SURVEY\nStations: ${a}, ${c}, ${d}\nFind both m and b.`,
+      `GRADE m = ${slope}\nAPPROVED STATION ${c}\nSolve for b.`,
+      `TERMINALS\nWest: ${a}\nCentral: ${d}`,
+      `AIRPORT TERMINALS\n${a}, ${c}, ${d}`
+    ][i];
+    const hint=[
+      `Substitute m = ${slope} and b = ${b} into y = mx + b.`,
+      `Use rise over run between ${a} and ${c}. Then substitute into y = mx + b.`,
+      `Substitute ${c} into y = mx + b using m = ${slope}. Solve for b.`,
+      `Find rise over run between ${a} and ${d}, then use either point to solve for b.`,
+      template.hint
+    ][i];
+    return {...template,m,b,stations,intel,hint};
+  });
+}
+let missions=makeMetroMissions();
 const $=s=>document.querySelector(s),canvas=$('#map'),ctx=canvas.getContext('2d');let level=+(localStorage.getItem('metro-level')||0);if(level>=missions.length)level=0;let score=+(localStorage.getItem('metro-score')||0),solved=false,attempts=0,trainT=0,anim=0,soundOn=true,audio;
 function tone(freq,duration=.12,type='sine',gain=.035,delay=0){if(!soundOn)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime+delay;o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+duration)}catch{}}
 function successSound(){tone(392,.16,'sine',.035);tone(523,.2,'sine',.035,.12);tone(659,.28,'sine',.04,.24)}function errorSound(){tone(150,.18,'sawtooth',.022);tone(110,.24,'sawtooth',.018,.12)}
@@ -81,7 +111,7 @@ function fmt(m){if(Math.abs(m-Math.round(m))<1e-8)return String(Math.round(m));r
 function load(){solved=false;attempts=0;const m=missions[level],n=String(level+1).padStart(2,'0');$('#title').textContent=m.title;$('#skill').textContent=m.skill;$('#brief').textContent=m.brief;$('#intel').textContent=m.intel;$('#missionNo').textContent=n;$('#briefNo').textContent=`${n} / 05`;$('#briefTitle').textContent=m.title;$('#briefCopy').textContent=m.brief;$('#briefObjective').textContent=m.intel;$('#progress').style.width=((level+1)/missions.length*100)+'%';$('#score').textContent=score;$('#network').textContent='Planning';$('#feedback').className='feedback';$('#feedback').textContent='Review the contract, calculate the equation, then authorize your route.';$('#next').className='next';$('#rise').value=1;$('#run').value=1;$('#intercept').value=0;$('#briefing').classList.add('show');update();draw()}
 function deploy(){attempts++;const m=missions[level],slope=currentM(),b=currentB(),sm=Math.abs(slope-m.m)<.001,sb=Math.abs(b-m.b)<.001;if(sm&&sb){solved=true;successSound();const bonus=Math.max(60,120-(attempts-1)*20);score+=bonus;localStorage.setItem('metro-score',score);localStorage.setItem('metro-level',level+1);$('#score').textContent=score;$('#network').textContent='Route certified';$('#feedback').className='feedback good';$('#feedback').textContent=`Route certified. Every station lies on y = ${fmt(m.m)}x ${m.b<0?'−':'+'} ${Math.abs(m.b)}. +${bonus} contract points.`;$('#next').className='next show';trainT=0}else{errorSound();$('#network').textContent='Revision required';$('#feedback').className='feedback bad';$('#feedback').textContent=!sm&&!sb?'The proposed line misses the required grade and downtown crossing. Recalculate both m and b.':!sm?'Your y-intercept is correct, but the slope is not. Check rise over run between stations.':'Your slope is correct, but the route crosses the y-axis in the wrong place. Solve for b.';draw()}}
 function animate(){if(solved)trainT=(trainT+.0035)%1;draw();anim=requestAnimationFrame(animate)}
-$('#begin').onclick=()=>{tone(440,.09,'sine',.025);$('#briefing').classList.remove('show')};$('#sound').onclick=()=>{soundOn=!soundOn;$('#sound').textContent=soundOn?'SOUND ON':'SOUND OFF';if(soundOn)tone(520,.12)};$('#deploy').onclick=deploy;$('#hint').onclick=()=>{attempts++;tone(660,.08,'sine',.018);$('#feedback').className='feedback';$('#feedback').textContent=missions[level].hint};$('#reset').onclick=()=>{$('#rise').value=1;$('#run').value=1;$('#intercept').value=0;solved=false;update()};$('#next').onclick=()=>{level++;if(level>=missions.length){successSound();$('#complete').classList.add('show');localStorage.setItem('metro-level',0)}else load()};$('#again').onclick=()=>{level=0;score=0;localStorage.removeItem('metro-level');localStorage.removeItem('metro-score');$('#complete').classList.remove('show');load()};fit();load();animate();
+$('#begin').onclick=()=>{tone(440,.09,'sine',.025);$('#briefing').classList.remove('show')};$('#sound').onclick=()=>{soundOn=!soundOn;$('#sound').textContent=soundOn?'SOUND ON':'SOUND OFF';if(soundOn)tone(520,.12)};$('#deploy').onclick=deploy;$('#hint').onclick=()=>{attempts++;tone(660,.08,'sine',.018);$('#feedback').className='feedback';$('#feedback').textContent=missions[level].hint};$('#reset').onclick=()=>{$('#rise').value=1;$('#run').value=1;$('#intercept').value=0;solved=false;update()};$('#next').onclick=()=>{level++;if(level>=missions.length){successSound();$('#complete').classList.add('show');localStorage.setItem('metro-level',0)}else load()};$('#again').onclick=()=>{missions=makeMetroMissions();level=0;score=0;localStorage.removeItem('metro-level');localStorage.removeItem('metro-score');$('#complete').classList.remove('show');load()};fit();load();animate();
 </script>
 </body>
 </html>

@@ -7,11 +7,11 @@ const places = [
   {id:'grocery', name:'Grocery store', x:4, y:3},
   {id:'thrift', name:'Thrift shop', x:0, y:3},
 ];
-const jobs = {
+const baseJobs = {
   cafe:{name:'Café', pay:288, commute:0, description:'Four shifts. Walk to work for free.'},
-  warehouse:{name:'Warehouse', pay:384, commute:48, description:'Four early shifts. Set aside $48 for rides before the bus starts running.'},
+  warehouse:{name:'Warehouse', pay:384, commute:48, description:'Four early shifts. Set aside money for rides before the bus starts running.'},
 };
-const furniture = [
+const baseFurniture = [
   {id:'bed', name:'Bed and mattress', price:150, icon:'🛏️'},
   {id:'desk', name:'Used desk', price:35, icon:'🪑'},
   {id:'lamp', name:'Reading lamp', price:20, icon:'💡'},
@@ -20,7 +20,12 @@ const keys = {
   ArrowUp:[0,-1], w:[0,-1], ArrowDown:[0,1], s:[0,1],
   ArrowLeft:[-1,0], a:[-1,0], ArrowRight:[1,0], d:[1,0],
 };
-const initial = () => ({cash:500, position:places[0], place:'home', job:null, groceries:0, shifts:0, paid:false, owned:[], color:'sage', done:false});
+function initial(previous) {
+  const variants = [-2,-1,0,1,2].filter(value=>value!==previous);
+  const priceOffset = variants[Math.floor(Math.random()*variants.length)];
+  return {priceOffset,cash:500,position:places[0],place:'home',job:null,groceries:0,
+    shifts:0,paid:false,owned:[],color:'sage',done:false};
+}
 const dollars = n => '$'+n.toLocaleString('en-US');
 
 export default function FirstWeek({exit}) {
@@ -36,6 +41,14 @@ export default function FirstWeek({exit}) {
     if (url.protocol==='https:' && (url.hostname==='forms.gle' || (url.hostname==='docs.google.com' && url.pathname.startsWith('/forms/')))) formLink=url.href;
   } catch {}
   const target = places.find(place=>place.x===week.position.x && place.y===week.position.y);
+  const offset = week.priceOffset;
+  const jobs = {
+    cafe:{...baseJobs.cafe,pay:baseJobs.cafe.pay+offset*8},
+    warehouse:{...baseJobs.warehouse,pay:baseJobs.warehouse.pay+offset*8,
+      commute:baseJobs.warehouse.commute+offset*4},
+  };
+  const furniture = baseFurniture.map(item=>({...item,price:item.price+offset*5}));
+  const food = [80+offset*5,120+offset*5];
   const job = jobs[week.job];
   const objective = !job?'Visit the café or warehouse to accept a job.'
     : !week.groceries?'Buy a week of food at the grocery store.'
@@ -68,7 +81,7 @@ export default function FirstWeek({exit}) {
 
   function replay() {
     setPrevious({cash:week.cash, job:job.name});
-    setWeek(initial());
+    setWeek(initial(week.priceOffset));
     setFeedback(false);
     setSent(false);
     setSavedLocally(false);
@@ -144,7 +157,7 @@ export default function FirstWeek({exit}) {
             {week.paid?<div className="actions"><button className="btn" onClick={()=>setWeek({...week,done:true})}>Finish week</button></div>:null}
           </>:null}
           {jobs[week.place]?<>
-            <p>{jobs[week.place].description} Take-home pay on Friday: {dollars(jobs[week.place].pay)}.</p>
+            <p>{jobs[week.place].description} Take-home pay on Friday: {dollars(jobs[week.place].pay)}. Commute for the week: {dollars(jobs[week.place].commute)}.</p>
             {!job?<button className="btn" onClick={()=>setWeek(w=>w.job?w:{...w,job:w.place,cash:w.cash-jobs[w.place].commute})}>Accept job</button>
               : week.job!==week.place?<p>You already accepted the {job.name} job.</p>
               : !week.groceries?<p>Stock up on food before your first shift.</p>
@@ -153,11 +166,11 @@ export default function FirstWeek({exit}) {
           </>:null}
           {week.place==='grocery'?week.groceries?<p>Your food is covered for the week.</p>:<>
             <p>Choose food for the week.</p>
-            {[80,120].map(price=><button className="btn secondary" key={price} disabled={week.cash<price} onClick={()=>setWeek(w=>w.groceries||w.cash<price?w:{...w,cash:w.cash-price,groceries:price})}>{price===80?'Cook at home':'Prepared meals'} · {dollars(price)}</button>)}
+            {food.map((price,index)=><button className="btn secondary" key={price} disabled={week.cash<price} onClick={()=>setWeek(w=>w.groceries||w.cash<price?w:{...w,cash:w.cash-price,groceries:price})}>{index===0?'Cook at home':'Prepared meals'} · {dollars(price)}</button>)}
           </>:null}
           {week.place==='thrift'?<>
             <p>Take a look at what’s available for your room.</p>
-            {furniture.map(item=><button className="btn secondary" key={item.id} disabled={week.owned.includes(item.id)||week.cash-item.price<(week.groceries?0:80)+(week.job?0:48)}
+            {furniture.map(item=><button className="btn secondary" key={item.id} disabled={week.owned.includes(item.id)||week.cash-item.price<(week.groceries?0:food[0])+(week.job?0:jobs.warehouse.commute)}
               onClick={()=>setWeek(w=>({...w,cash:w.cash-item.price,owned:[...w.owned,item.id]}))}>
               {item.name} · {week.owned.includes(item.id)?'Owned':dollars(item.price)}
             </button>)}
