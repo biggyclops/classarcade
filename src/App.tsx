@@ -1,7 +1,7 @@
 import { CommandHome } from "./concepts/CommandHome";
 import { ImmersiveHome } from "./concepts/ImmersiveHome";
 import { ConstellationHome } from "./concepts/ConstellationHome";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import {
   Gamepad2,
@@ -32,6 +32,8 @@ import {
 import { games, classroomNames, concepts, Game } from "./data";
 import { Artwork, GameCard, Dialog, Primary } from "./components";
 import { asset } from "./assets";
+const edgeMatchUrl = "/games/edge-match-64/index.html";
+
 type Collection = { name: string; ids: number[] };
 type Modal = "settings" | "import" | "collection" | null;
 function saved<T>(key: string, fallback: T): T {
@@ -67,6 +69,7 @@ export default function App() {
   const [notice, setNotice] = useState("");
   const [reduced, setReduced] = useState(() => saved("reduced", false));
   const [sound, setSound] = useState(() => saved("sound", false));
+  const edgeMatchRoar = useRef<HTMLAudioElement>(null);
   const [launch, setLaunch] = useState<Game | null>(null);
   const [collectionName, setCollectionName] = useState("");
   const [collectionError, setCollectionError] = useState("");
@@ -125,17 +128,20 @@ export default function App() {
       x.includes(id) ? x.filter((n) => n !== id) : [...x, id],
     );
   }
+  function openDetail(g: Game) {
+    setDetail(g);
+    const roar = edgeMatchRoar.current;
+    if (g.launchUrl === edgeMatchUrl && roar) {
+      roar.volume = 0.65;
+      roar.currentTime = 0;
+      void roar.play().catch(() => {
+        /* Opening the game details does not require audio playback. */
+      });
+    }
+  }
   function play(g: Game) {
     setRecent((x) => [g.id, ...x.filter((i) => i !== g.id)]);
     setLaunch(g);
-    if (g.launchUrl === "/games/edge-match-64/index.html") {
-      const roar = new Audio(asset("/games/edge-match-64/roar.mp3"));
-      roar.volume = 0.35;
-      void roar.play().catch(() => {
-        /* The game can open even when playback is blocked. */
-      });
-      return;
-    }
     if (sound) {
       try {
         const c = new AudioContext();
@@ -186,13 +192,14 @@ export default function App() {
       key={g.id}
       game={g}
       wide={wide}
-      onOpen={() => setDetail(g)}
+      onOpen={() => openDetail(g)}
       favorite={favorites.includes(g.id)}
       toggle={() => favorite(g.id)}
     />
   );
   return (
     <MotionConfig reducedMotion={reduced ? "always" : "user"}>
+      <audio ref={edgeMatchRoar} src={asset("/games/edge-match-64/roar.mp3")} preload="auto" />
       <div
         className={`app immersive-edition concept-${concept} ${reduced ? "reduce-motion" : ""}`}
       >
@@ -473,14 +480,14 @@ export default function App() {
                       <CommandHome
                         featured={featured}
                         play={play}
-                        setDetail={setDetail}
+                        setDetail={openDetail}
                       />
                     )}
                     {isHome && concept === "b" && (
                       <ImmersiveHome
                         featured={featured}
                         play={play}
-                        setDetail={setDetail}
+                        setDetail={openDetail}
                         selected={selected}
                         setSelected={setSelected}
                         favorites={favorites}
@@ -490,7 +497,7 @@ export default function App() {
                     {isHome && concept === "c" && (
                       <ConstellationHome
                         play={play}
-                        setDetail={setDetail}
+                        setDetail={openDetail}
                         selected={selected}
                         setSelected={setSelected}
                       />
@@ -511,7 +518,7 @@ export default function App() {
                             <button
                               className="continue-game"
                               key={id}
-                              onClick={() => setDetail(games[id])}
+                              onClick={() => openDetail(games[id])}
                             >
                               <Artwork game={games[id]} />
                               <div>
@@ -975,7 +982,7 @@ export default function App() {
                   title={launch.title}
                   allow="fullscreen; autoplay"
                   sandbox={
-                    launch.launchUrl === "/games/edge-match-64/index.html"
+                    launch.launchUrl === edgeMatchUrl
                       ? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                       : "allow-scripts allow-same-origin allow-forms allow-pointer-lock"
                   }
