@@ -882,6 +882,15 @@
         display: none;
       }
     }
+
+    .guided-mode :is(#grid-tool-pills, .preset-controls, #btn-random-sandbox, #btn-clear-grid) { display: none; }
+    .preset-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    #campaign-panel { margin: 0 0 10px; padding: 10px 12px; border: 1px solid #36546b; border-radius: 8px; font-size: .86rem; line-height: 1.4; }
+    #campaign-panel[hidden], #campaign-next[hidden], #campaign-status[hidden] { display: none; }
+    #campaign-panel p { margin: 5px 0 0; }
+    #campaign-status { margin: 8px 0; font-size: .85rem; line-height: 1.4; color: #d6f5ff; }
+    #campaign-next { margin: 4px 0 8px; color: #042419; background: #6ee7b7; font-weight: 800; }
+    #fire-btn:disabled { opacity: .55; cursor: default; }
   </style>
 </head>
 <body>
@@ -907,7 +916,7 @@
       <div class="hud-stats">
         <div class="stat-chip">
           <span class="lbl">Mode</span>
-          <span class="val emerald">3.1 SANDBOX</span>
+          <span class="val emerald" id="mode-name">GUIDED MISSIONS</span>
         </div>
         <div class="stat-chip">
           <span class="lbl">Targets Hit</span>
@@ -923,6 +932,8 @@
       <!-- Left: Interactive Cartesian Coordinate Plane -->
       <div id="grid-stage">
         <div id="mission-banner">
+          <button type="button" class="icon-btn" id="mode-switch">Open Sandbox</button>
+          <span class="preset-controls">
           <span class="wave-tag">3.1 PRESET</span>
           <select id="preset-select" aria-label="Choose Section 3.1 Practice Problem">
             <option value="0">1. Identifying Slope &amp; Y-Intercept (Positive Slopes)</option>
@@ -934,6 +945,7 @@
             <option value="6">7. Blank Sandbox Canvas (Build Your Own Grid!)</option>
           </select>
           <button type="button" class="icon-btn" id="btn-reset-preset" style="padding:4px 8px;">&#8635; Reset</button>
+          </span>
         </div>
 
         <canvas id="gridCanvas"></canvas>
@@ -1023,7 +1035,13 @@
             </div>
           </div>
 
+          <section id="campaign-panel" aria-label="Mission objective">
+            <strong id="campaign-title"></strong>
+            <p id="campaign-goal"></p>
+          </section>
           <button type="button" id="fire-btn">&#9889; FIRE LASER BEAM</button>
+          <p id="campaign-status" role="status" hidden></p>
+          <button type="button" class="icon-btn" id="campaign-next" hidden>Next Mission</button>
         </div>
 
         <!-- 2. Section 3.1 Live (x, y) Value Table -->
@@ -1341,6 +1359,106 @@
           hazards: []
         }
       ];
+
+      const $mission = id => document.getElementById(id);
+      const missionPanel = $mission('campaign-panel');
+      const missionStatus = $mission('campaign-status');
+      const nextMission = $mission('campaign-next');
+      const modeSwitch = $mission('mode-switch');
+      const missions = [
+        { title: 'First beam', slopes: [[1,1],[2,1]], xs: [0,2] },
+        { title: 'Downhill run', slopes: [[-1,1],[-2,1]], xs: [-2,1] },
+        { title: 'Fractional slope', slopes: [[1,2],[2,3]], xs: [-1,1] },
+        { title: 'Level sweep', slopes: [[0,1]], xs: [-3,1,4] },
+        { title: 'Triple hit', slopes: [[1,1],[-1,1],[1,2]], xs: [-2,1,2] },
+        { title: 'Satellite relay', slopes: [[-1,2],[-2,3]], xs: [-1,0,1], satellite: true }
+      ];
+      let guided = true;
+      let missionIndex = 0;
+      let missionCleared = false;
+      let missionHintCount = 0;
+
+      function missionNumbers(spec) {
+        const [rise, run] = spec.slopes[problemInteger(0, spec.slopes.length - 1)];
+        let b = problemInteger(-3, 3);
+        if (missionIndex === 0 && b === 0) b = -2;
+        return { rise, run, b };
+      }
+
+      function reportMission(message) {
+        missionStatus.hidden = false;
+        missionStatus.textContent = message;
+      }
+
+      function startMission(index) {
+        missionIndex = index;
+        missionCleared = false;
+        missionHintCount = 0;
+        nextMission.hidden = true;
+        missionStatus.hidden = true;
+        fireBtn.disabled = false;
+        hintBtn.disabled = false;
+        hintBtn.textContent = 'Hint';
+        hintBox.classList.remove('visible');
+        hintBox.replaceChildren();
+        const spec = missions[index];
+        const { rise, run, b } = freshProblem('laser.mission.' + index, () => missionNumbers(spec));
+        targets = spec.xs.map((point, i) => ({
+          id: 'mission-target-' + i, x: point * run, y: point * rise + b,
+          type: 'drone', hp: 1, maxHp: 1, pulse: i
+        }));
+        hazards = spec.satellite ? [{ id: 'mission-satellite', x: 0, y: b + 3, label: 'SAT-1', pulse: 0 }] : [];
+        selectedEntity = targets[0];
+        inputRise.value = inputRun.value = inputMDec.value = 1;
+        inputB.value = 0;
+        $mission('campaign-title').textContent = `Mission ${index + 1} of ${missions.length} · ${spec.title}`;
+        const points = targets.map(({ x, y }) => `(${x}, ${y})`).join(', ');
+        const aim = index === 0 ? ' Start with the drone on the y-axis to find b.' : '';
+        const avoid = spec.satellite ? ` Avoid the satellite at (0, ${b + 3}).` : '';
+        $mission('campaign-goal').textContent = `Hit all ${targets.length} drones with one beam. Targets ${points}.${avoid}${aim}`;
+        updateEquationPreview();
+      }
+
+      function updateMode() {
+        document.body.classList.toggle('guided-mode', guided);
+        $mission('mode-name').textContent = guided ? 'GUIDED MISSIONS' : '3.1 SANDBOX';
+        modeSwitch.textContent = guided ? 'Open Sandbox' : 'Play Guided Missions';
+        missionPanel.hidden = !guided || isDemoMode;
+        modeSwitch.disabled = isDemoMode;
+        if (!guided || isDemoMode) {
+          missionStatus.hidden = true;
+          nextMission.hidden = true;
+        }
+        fireBtn.disabled = guided && missionCleared && !isDemoMode;
+        hintBtn.disabled = guided && missionCleared && !isDemoMode;
+        hintBtn.textContent = guided && !isDemoMode
+          ? (missionHintCount ? 'Show Worked Solution' : 'Hint')
+          : 'Step-by-Step 3.1 Algebra Hint';
+      }
+
+      function showHint() {
+        if (!guided || isDemoMode || missionHintCount) {
+          generateAlgebraHint();
+          return;
+        }
+        missionHintCount++;
+        const a = targets[0], b = targets[1];
+        hintBox.textContent = missionIndex === 0
+          ? `The drone at (0, ${a.y}) gives b. From there, count the vertical and horizontal steps to the second drone to find m.`
+          : `Use drones at (${a.x}, ${a.y}) and (${b.x}, ${b.y}). Find the change in y divided by the change in x, then use either point to find b.`;
+        hintBox.classList.add('visible');
+        hintBtn.textContent = 'Show Worked Solution';
+      }
+
+      function reportMiss(m, b, remaining) {
+        const target = remaining.reduce((nearest, current) =>
+          Math.abs(m * current.x + b - current.y) < Math.abs(m * nearest.x + b - nearest.y) ? current : nearest
+        );
+        const delta = m * target.x + b - target.y;
+        const amount = Number(Math.abs(delta).toFixed(2));
+        const direction = delta > 0 ? 'high' : 'low';
+        reportMission(`At x = ${target.x}, your beam was ${amount} ${amount === 1 ? 'unit' : 'units'} too ${direction}. Adjust the equation and try again.`);
+      }
 
       function loadPreset(idx) {
         const spec = PRESETS_3_1[idx] || PRESETS_3_1[0];
@@ -1967,6 +2085,12 @@
           color: hitList.length >= 2 ? '#34d399' : '#38bdf8'
         });
 
+        if (guided && hitList.length !== targets.length) {
+          appendShotLog(eqPlain, hitList.length ? 'PARTIAL HIT' : 'MISSED', 'miss');
+          reportMiss(m, b, targets.filter(target => !hitList.includes(target)));
+          return;
+        }
+
         if (hitList.length > 0) {
           sfx.playHit(hitList.length);
           hitList.forEach((t) => {
@@ -2031,6 +2155,7 @@
         btnWatchDemo.innerHTML = '&#9632; Exit Demo';
         btnDemoExit.textContent = 'Exit Demo / Sandbox';
 
+        updateMode();
         runDemoStep(0);
       }
 
@@ -2042,6 +2167,11 @@
         btnWatchDemo.classList.remove('active');
         btnWatchDemo.innerHTML = '&#9654; Voice Demo';
         setDemoInputsLocked(false);
+        updateMode();
+        if (guided && missionCleared) {
+          nextMission.hidden = false;
+          missionStatus.hidden = false;
+        }
 
         demoVisuals = {
           spotlights: [],
@@ -2392,10 +2522,12 @@
           }
           return;
         }
+        if (guided && missionCleared) return;
         sfx.init();
         const { m, b, rise, run, valid } = getCurrentSlopeAndIntercept();
         if (!valid) {
           addPopup(0, 0, 'INVALID EQUATION!', '#fb7185');
+          if (guided) reportMission('Enter a valid slope and y-intercept. Run cannot be zero.');
           return;
         }
 
@@ -2423,11 +2555,12 @@
             addPopup(h.x, h.y, 'SATELLITE HIT!', '#fb7185');
           });
           appendShotLog(eqPlain, 'SATELLITE HIT', 'hazard');
+          if (guided) reportMission('Your beam hit the satellite. Check its coordinates and choose a line that avoids it.');
           return;
         }
 
         const hitList = targets.filter(
-          (t) => pointToLineVerticalDistance(t.x, t.y, m, b) <= 0.36
+          (t) => pointToLineVerticalDistance(t.x, t.y, m, b) <= (guided ? 0.05 : 0.36)
         );
 
         laserBeams.push({
@@ -2464,6 +2597,17 @@
           if (targets.length === 0) {
             sfx.playWaveClear();
             addPopup(0, 0, 'ALL TARGETS CLEARED!', '#34d399');
+            if (guided) {
+              missionCleared = true;
+              const finished = missionIndex === missions.length - 1;
+              reportMission(finished ? 'Campaign complete! You cleared all six missions.' : 'Mission cleared! You hit every drone in one shot.');
+              nextMission.textContent = finished ? 'Play Again' : 'Next Mission';
+              nextMission.hidden = false;
+              fireBtn.disabled = true;
+              hintBtn.disabled = true;
+              hintBox.classList.remove('visible');
+              nextMission.focus();
+            }
           }
         } else {
           appendShotLog(eqPlain, 'LINE PLOTTED', 'miss');
@@ -2565,7 +2709,22 @@
       });
 
       fireBtn.addEventListener('click', fireLaser);
-      hintBtn.addEventListener('click', generateAlgebraHint);
+      hintBtn.addEventListener('click', showHint);
+      nextMission.addEventListener('click', () => {
+        startMission((missionIndex + 1) % missions.length);
+        (slopeInputMode === 'FRACTION' ? inputRise : inputMDec).focus();
+      });
+      modeSwitch.addEventListener('click', () => {
+        guided = !guided;
+        gridTool = 'INSPECT';
+        document.querySelectorAll('.tool-pill').forEach(pill =>
+          pill.classList.toggle('active', pill.dataset.tool === 'INSPECT')
+        );
+        cursorReadoutEl.innerHTML = 'Tool: <strong>Inspect / Aim</strong>';
+        updateMode();
+        if (guided) startMission(0);
+        else loadPreset(Number(presetSelect.value));
+      });
       btnWatchDemo.addEventListener('click', () => {
         if (isDemoMode) exitDemoMode();
         else startDemoMode();
@@ -3191,8 +3350,8 @@
 
       window.onload = function () {
         resizeGrid();
-        loadPreset(0);
-        updateEquationPreview();
+        updateMode();
+        startMission(0);
         requestAnimationFrame(animate);
       };
     })();
