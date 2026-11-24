@@ -1,6 +1,6 @@
 import { Game, games } from "../data";
 import { Artwork, Primary } from "../components";
-import { ArrowUpRight, ChevronRight, Star, Orbit } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Star } from "lucide-react";
 import { asset } from "../assets";
 import { AnimatePresence, motion } from "motion/react";
 export function ImmersiveHome({
@@ -24,31 +24,18 @@ export function ImmersiveHome({
     <section className="immersive-hero">
       <AnimatePresence mode="wait">
         <motion.div
-          className={featured.id === 3 ? "immersive-background equation-background" : "immersive-background"}
+          className="immersive-background"
           key={selected}
           initial={{ opacity: 0, scale: 1.025 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {featured.id === 3 ? (
-            <div className="equation-flyby" aria-hidden="true">
-              <img src={asset("/art/equation-banner.webp")} alt="" />
-              <div className="equation-engine-light" />
-              <div className="equation-station-light" />
-              <div className="equation-escort">
-                <i />
-                <i />
-                <i />
-              </div>
-            </div>
-          ) : (
-            <img
+          <img
               className="art"
-              src={asset(featured.id === 0 ? "/art/slope-banner.webp" : `/art/game-${featured.id}.webp`)}
+              src={asset(featured.cover ?? (featured.id === 0 ? "/art/slope-banner.webp" : `/art/game-${featured.id}.webp`))}
               alt=""
             />
-          )}
         </motion.div>
       </AnimatePresence>
       <div className="immersive-fade" />
