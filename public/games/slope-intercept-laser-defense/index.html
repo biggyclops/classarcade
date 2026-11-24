@@ -1380,15 +1380,23 @@
       const missions = [
         { title: 'First beam', slopes: [[1,1],[2,1]], xs: [0,2] },
         { title: 'Downhill run', slopes: [[-1,1],[-2,1]], xs: [-2,1] },
-        { title: 'Fractional slope', slopes: [[1,2],[2,3]], xs: [-1,1] },
+        { title: 'Air Assault · Fractional slope', slopes: [[1,2],[2,3]], xs: [-1,1] },
         { title: 'Level sweep', slopes: [[0,1]], xs: [-3,1,4] },
         { title: 'Triple hit', slopes: [[1,1],[-1,1],[1,2]], xs: [-2,1,2] },
-        { title: 'Satellite relay', slopes: [[-1,2],[-2,3]], xs: [-1,0,1], satellite: true }
+        { title: 'Air Commander · Satellite relay', slopes: [[-1,2],[-2,3]], xs: [-1,0,1], satellite: true }
       ];
       let guided = true;
       let missionIndex = 0;
       let missionCleared = false;
       let missionHintCount = 0;
+      let streak = 0, rockets = 0, rocketTrails = [];
+      const arsenal = document.createElement('div');
+      arsenal.style.cssText='padding:10px;border:1px solid #f59e0b;border-radius:8px;color:#fde68a;margin:8px 0;font-weight:700';
+      arsenal.setAttribute('role','status');
+      missionPanel.append(arsenal);
+      function updateArsenal(){ arsenal.textContent = `STREAK ${streak} · ROCKETS ${rockets} · ${missionIndex >= 2 ? 'AIR ASSAULT — correct line locks rockets onto aircraft' : 'Clear Stage 2 to unlock rockets'}`; }
+      function launchRocket(t,b){ rocketTrails.push({x:t.x,y:t.y,b,life:0.65}); }
+
 
       function missionNumbers(spec) {
         const [rise, run] = spec.slopes[problemInteger(0, spec.slopes.length - 1)];
@@ -1404,6 +1412,9 @@
 
       function startMission(index) {
         missionIndex = index;
+        if(index === 0){ streak = 0; rockets = 0; }
+        rocketTrails = [];
+        updateArsenal();
         missionCleared = false;
         missionHintCount = 0;
         nextMission.hidden = true;
@@ -1417,7 +1428,7 @@
         const { rise, run, b } = freshProblem('laser.mission.' + index, () => missionNumbers(spec));
         targets = spec.xs.map((point, i) => ({
           id: 'mission-target-' + i, x: point * run, y: point * rise + b,
-          type: 'drone', hp: 1, maxHp: 1, pulse: i
+          type: index >= 2 ? (index === missions.length-1 && i === 0 ? 'airboss' : 'aircraft') : 'drone', hp: 1, maxHp: 1, pulse: i
         }));
         hazards = spec.satellite ? [{ id: 'mission-satellite', x: 0, y: b + 3, label: 'SAT-1', pulse: 0 }] : [];
         selectedEntity = targets[0];
@@ -1425,7 +1436,7 @@
         inputB.value = 0;
         $mission('campaign-title').textContent = `Mission ${index + 1} of ${missions.length} · ${spec.title}`;
         const points = targets.map(({ x, y }) => `(${x}, ${y})`).join(', ');
-        const aim = index === 0 ? ' Start with the drone on the y-axis to find b.' : '';
+        const aim = index === 2 ? ' Air assault! Aircraft hover at fixed coordinates while you aim. Correct lines launch earned rockets.' : index === 0 ? ' Start with the drone on the y-axis to find b.' : '';
         const avoid = spec.satellite ? ` Avoid the satellite at (0, ${b + 3}).` : '';
         $mission('campaign-goal').textContent = `Hit all ${targets.length} drones with one beam. Targets ${points}.${avoid}${aim}`;
         updateEquationPreview();
@@ -2561,6 +2572,7 @@
             addPopup(h.x, h.y, 'SATELLITE HIT!', '#fb7185');
           });
           appendShotLog(eqPlain, 'SATELLITE HIT', 'hazard');
+          if (guided) { streak = 0; updateArsenal(); }
           if (guided) reportMission('Your beam hit the satellite. Check its coordinates and choose a line that avoids it.');
           return;
         }
@@ -2577,12 +2589,14 @@
 
         if (guided && hitList.length !== targets.length) {
           appendShotLog(eqPlain, hitList.length ? 'PARTIAL HIT' : 'MISSED', 'miss');
+          streak = 0; updateArsenal();
           reportMiss(m, b, targets.filter(target => !hitList.includes(target)));
           return;
         }
 
         if (hitList.length > 0) {
           const comboMultiplier = hitList.length;
+          if(guided){ streak++; if(missionIndex === 1 || streak % 3 === 0) rockets += 3; if(missionIndex >= 2 && rockets > 0){ hitList.slice(0,rockets).forEach(t=>{launchRocket(t,b);rockets--;}); } updateArsenal(); }
           sfx.playHit(comboMultiplier);
 
           hitList.forEach((t) => {
@@ -3080,6 +3094,12 @@
             ctx.fill();
             ctx.stroke();
             ctx.rotate(-(globalTime * 0.6 + t.pulse));
+          } else if(t.type === 'aircraft' || t.type === 'airboss') {
+            const boss=t.type==='airboss'; const z=boss?1.25:1;
+            ctx.save(); ctx.translate(0,Math.sin(globalTime*5+t.pulse)*3); ctx.scale(z,z);
+            ctx.fillStyle=boss?'#7c3aed':'#164e63'; ctx.strokeStyle=boss?'#e9d5ff':'#67e8f9'; ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(r*1.4,r*.55);ctx.lineTo(0,r*.25);ctx.lineTo(-r*1.4,r*.55);ctx.closePath();ctx.fill();ctx.stroke();
+            ctx.fillStyle='#fbbf24';ctx.fillRect(-r*.28,r*.45,r*.56,r*(.3+.2*Math.sin(globalTime*22)));ctx.restore();
           } else {
             ctx.fillStyle = '#881337';
             ctx.strokeStyle = '#fb7185';
@@ -3274,6 +3294,7 @@
       }
 
       function drawLasersAndParticles(dt) {
+        rocketTrails = rocketTrails.filter(q=>{q.life-=dt;const p=Math.min(1,1-q.life/.65);const x=toPixelX(q.x*p),y=toPixelY(q.b+(q.y-q.b)*p);ctx.save();ctx.strokeStyle='#fb923c';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(toPixelX(q.x*Math.max(0,p-.2)),toPixelY(q.b+(q.y-q.b)*Math.max(0,p-.2)));ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle='#fff7ed';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.restore();if(q.life<=0){spawnExplosion(q.x,q.y,'#fb923c',32);return false;}return true;});
         for (let i = laserBeams.length - 1; i >= 0; i--) {
           const lb = laserBeams[i];
           lb.life -= dt;
