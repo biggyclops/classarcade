@@ -17,11 +17,31 @@ const baseFurniture = [
   {id:'lamp', name:'Reading lamp', price:20},
 ];
 const foodOptions = [
-  {id:'groceries', name:'Cook at home', description:'Bread, eggs, and fresh produce'},
+  {id:'groceries', name:'Cook at home', description:'Produce and beans for home cooking'},
   {id:'prepared-meals', name:'Prepared meals', description:'Ready-to-heat entrées'},
 ];
 function itemPhoto(id) {
-  return new URL(`./items/${id}.webp`, import.meta.url).href;
+  return new URL(`./items/${id}.webp?v=2`, import.meta.url).href;
+}
+
+const shareAlike = ['CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'];
+const photoCredits = [
+  ['Grocery bag of healthy foods.jpg', 'Bill Branson / National Cancer Institute', 'U.S. public domain', 'https://creativecommons.org/publicdomain/mark/1.0/'],
+  ['Chicken Dinner.jpg', 'Kefeizheng01', ...shareAlike],
+  ['Bed.jpg', 'Gausanchennai', ...shareAlike],
+  ['Full view of desk.jpg', 'Nono cocon', 'CC0 1.0', 'https://creativecommons.org/publicdomain/zero/1.0/'],
+  ['Desktop-lamp-2 hg.jpg', 'Hannes Grobe', ...shareAlike],
+];
+
+function PhotoCredits() {
+  return <details className="week-photo-credits">
+    <summary>Item photo credits</summary>
+    <ul>{photoCredits.map(([title, author, license, licenseUrl])=><li key={title}>
+      <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(title.replaceAll(' ', '_'))}`} target="_blank" rel="noreferrer">{title}</a>
+      {' by '}{author}{' · '}<a href={licenseUrl} target="_blank" rel="noreferrer">{license}</a>
+    </li>)}</ul>
+    <p>Photos were resized and converted to WebP. Furniture photos were also cropped and their backgrounds removed.</p>
+  </details>;
 }
 
 function ShopItem({item, children}) {
@@ -426,5 +446,6 @@ export default function FirstWeek({exit}) {
         </section>
       </div>
     </>}
+    <PhotoCredits />
   </main>;
 }

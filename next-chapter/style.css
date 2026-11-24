@@ -180,3 +180,5 @@
 .budget-comparison th, .budget-comparison td { white-space: normal; min-width: 100px; vertical-align: top; padding: .4rem .55rem; }
 .budget-comparison td:last-child { background: #eaf2e7; }
 @media (prefers-reduced-motion: reduce) { .week-player span { animation: none; } }
+.week-photo-credits { margin-top: 1rem; font-size: .875rem; }
+.week-photo-credits summary { cursor: pointer; }
