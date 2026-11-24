@@ -57,8 +57,11 @@ function BudgetFixes({game,draft,settings,summary,apply}) {
   const issue = summary.balance<0?'monthly':summary.after<0?'upfront':!summary.commute.ok?'commute':null;
   if (!summary.complete || !issue) return null;
 
+  const military = game.profile.scenario==='military';
   const choices = kinds.flatMap(kind=>options(kind,settings,game)
-    .filter(option=>option.id!==draft[kind])
+    .filter(option=>option.id!==draft[kind] &&
+      (kind!=='work'||(option.qualification!=='license'&&(option.qualification!=='service'||military))) &&
+      (kind!=='housing'||option.id!=='provided'||military))
     .map(option=>{
       const next={...draft,[kind]:option.id};
       const preview=planSummary(game,next,settings);
