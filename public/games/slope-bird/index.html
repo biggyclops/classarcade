@@ -47,6 +47,11 @@ const canvas = get('course');
 const ctx = canvas.getContext('2d');
 const colors = { mint:'#6ff2ce', gold:'#ffe383', ice:'#c6eaf2' };
 let gate, phase, question, gapHalfHeight, birdX, birdY, velocity, step, clock, previous;
+const wingsUp = new Image();
+wingsUp.src = 'kingfisher-up.webp';
+const wingsDown = new Image();
+wingsDown.src = 'kingfisher-down.webp';
+let downstrokeUntil = 0;
 let best = 0;
 try { best = Number(localStorage.getItem('slope-wing-relations-best')) || 0; } catch {}
 const sx = x => 75+x*77;
@@ -207,6 +212,7 @@ get('launch').onclick=()=>{
   if(phase==='clear'){setupGate();answerControl().focus();return}
   if(phase!=='ready') return;
   phase='fly';
+  downstrokeUntil=0;
   birdX=0;
   birdY=question.y;
   velocity=0;
@@ -217,7 +223,11 @@ get('launch').onclick=()=>{
   get('heading').textContent='Fly through';
   setMessage('Aim for y = '+shown(question.y)+'.');
 };
-function flap(){if(phase==='fly') velocity=3.5}
+function flap(){
+  if(phase!=='fly') return;
+  velocity=3.5;
+  downstrokeUntil=clock+.14;
+}
 get('flap').onclick=flap;
 canvas.addEventListener('pointerdown',flap);
 window.addEventListener('keydown',event=>{
@@ -240,7 +250,7 @@ function update(dt){
     get('launch').hidden=false;
     get('launch').textContent='Retry flight';
     get('heading').textContent='Try the flight again';
-    setMessage('Your answer is still correct. Flap a little sooner when the glider drops.');
+    setMessage('Your answer is still correct. Flap a little sooner when the bird drops.');
     get('launch').focus();
     return;
   }
@@ -329,18 +339,18 @@ function wall(){
   }
   label('x = '+question.x,x-4,25,colors.gold,16);
 }
-function glider(){
-  const x=sx(birdX),y=sy(birdY);
-  ctx.save();ctx.translate(x,y);
+function drawBird(){
+  ctx.save();
+  ctx.translate(sx(birdX),sy(birdY));
   if(phase==='fly')ctx.rotate(-velocity*.055);
-  const wing=6*Math.sin(clock*(phase==='fly'?22:5));
-  ctx.shadowColor='#6ff2ce';ctx.shadowBlur=14;
-  ctx.fillStyle='#6ff2ce';
-  ctx.beginPath();ctx.moveTo(21,0);ctx.lineTo(-13,10);ctx.lineTo(-6,0);ctx.lineTo(-15,-10);ctx.closePath();ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.fillStyle='#f2fff6';
-  ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-13,-16+wing);ctx.lineTo(-7,4);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#153b54';ctx.beginPath();ctx.arc(12,-1,2.5,0,Math.PI*2);ctx.fill();
+  const downstroke = phase==='fly' && clock<downstrokeUntil;
+  const sprite = downstroke && wingsDown.naturalWidth ? wingsDown : wingsUp;
+  if(sprite.naturalWidth){
+    ctx.drawImage(sprite,-25,-22,50,42.5);
+  }else{
+    ctx.fillStyle=colors.mint;
+    ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();
+  }
   ctx.restore();
 }
 function frame(now){
@@ -356,7 +366,7 @@ function frame(now){
       ctx.strokeStyle='#101c3a';ctx.lineWidth=2;ctx.stroke();
     }
   }
-  glider();
+  drawBird();
   requestAnimationFrame(frame);
 }
 clock=0;
