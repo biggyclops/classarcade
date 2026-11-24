@@ -36,6 +36,9 @@ const laserDefenseUrl = "/games/slope-intercept-laser-defense/index.html";
 
 function gameFrameSource(path: string) {
   const source = asset(path);
+  if (path === "/games/next-chapter/index.html" && __NEXT_CHAPTER_RELEASE__ && !source.startsWith("data:")) {
+    return `${source}?release=${__NEXT_CHAPTER_RELEASE__.version}`;
+  }
   return path === laserDefenseUrl && !source.startsWith("data:")
     ? `${source}?release=${__CLASSARCADE_VERSION__}`
     : source;
