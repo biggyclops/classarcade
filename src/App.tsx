@@ -208,14 +208,19 @@ export default function App() {
         </a>
         <>
             <header className="topbar">
-              <button
-                className="brand"
-                onClick={() => go("Home")}
-                aria-label="ClassArcade home"
-              >
-                <Gamepad2 size={28} />
-                ClassArcade<span>®</span>
-              </button>
+              <div className="brand-release">
+                <button
+                  className="brand"
+                  onClick={() => go("Home")}
+                  aria-label="ClassArcade home"
+                >
+                  <Gamepad2 size={28} />
+                  ClassArcade<span>®</span>
+                </button>
+                <p className="release-label">
+                  Version {__CLASSARCADE_VERSION__} · Updated {__CLASSARCADE_UPDATE_DATE__}
+                </p>
+              </div>
               <nav aria-label="Main navigation">
                 {["Home", "Library", "Collections"].map((p) => (
                   <button

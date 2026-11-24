@@ -206,6 +206,13 @@ input[type="checkbox"] {
   white-space: nowrap;
   padding: 0;
 }
+.release-label {
+  margin: 4px 0 0;
+  color: #bcbacc;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
 .brand > svg {
   color: var(--accent);
 }
