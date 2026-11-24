@@ -882,7 +882,7 @@ input[type="checkbox"] {
   padding: 25px 0 20px;
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 12px;
   color: #9293a4;
   gap: 12px;
 }
@@ -2791,7 +2791,7 @@ dialog::backdrop {
     margin: 4px 0 0;
   }
   .app-footer {
-    font-size: 7px;
+    font-size: 11px;
     line-height: 1.8;
   }
   .app-footer > span {

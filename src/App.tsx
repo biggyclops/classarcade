@@ -29,7 +29,7 @@ import {
   X,
   Folder,
 } from "lucide-react";
-import { games, classroomNames, concepts, Game } from "./data";
+import { games, classroomNames, Game } from "./data";
 import { Artwork, GameCard, Dialog, Primary } from "./components";
 import { asset } from "./assets";
 const edgeMatchUrl = "/games/edge-match-64/index.html";
@@ -685,17 +685,8 @@ export default function App() {
                   </>
                 )}
                 <footer className="app-footer">
-                  <span>
-                    <Wifi size={12} /> Local prototype <i>·</i> All games are
-                    concept titles
-                  </span>
-                  <span>
-                    Synthetic data <i>·</i>{" "}
-                    {concepts.find((c) => c.id === concept)?.name}{" "}
-                    <span className="footer-letter">
-                      {concept.toUpperCase()}
-                    </span>
-                  </span>
+                  <span>ClassArcade version {__CLASSARCADE_VERSION__}</span>
+                  <span>Updated {__CLASSARCADE_UPDATE_DATE__}</span>
                 </footer>
               </main>
             </div>
