@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edge Match 64</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101520;color:#fff;font:1rem system-ui,sans-serif}
+main{position:relative;display:grid;align-content:end;justify-items:center;min-height:100vh;min-height:100svh;overflow:hidden;isolation:isolate;padding:1.5rem;text-align:center}
+.scene,.shade,.petals{position:absolute;inset:0;pointer-events:none}
+.scene{z-index:-3;animation:camera 13s ease-in-out infinite alternate}
+.frame{position:absolute;inset:0;margin:auto;width:max(100vw,177.68vh);height:max(100vh,56.28vw);left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
+.frame img{width:100%;height:100%;display:block}
+.glow{position:absolute;inset:0;mix-blend-mode:screen;background:radial-gradient(ellipse 24% 22% at 10% 12%,#0075cf85,transparent),radial-gradient(ellipse 5% 8% at 81% 39%,#009dff93,transparent),radial-gradient(ellipse 10% 12% at 55% 29%,#ff9b417d,transparent);animation:pulse 4.6s ease-in-out infinite alternate}
+.shade{z-index:-2;background:linear-gradient(0deg,#080d17 1%,#080d17b5 19%,transparent 52%)}
+.petals{z-index:-1;overflow:hidden}
+.petal{position:absolute;top:-10%;left:var(--x);width:var(--size);aspect-ratio:1.6;border-radius:85% 12% 80% 20%;background:linear-gradient(135deg,#ffe0e9,#fa7da0);animation:fall var(--speed) linear var(--delay) infinite}
+h1{margin:0;font-size:clamp(2.6rem,8vw,7rem);line-height:1;letter-spacing:-.065em;text-transform:uppercase;text-shadow:0 3px 28px #05070d}
+h1 span{color:#8fddff}
+a,button{color:inherit;font:inherit}
+a{display:inline-block;margin:1.3rem 0 2rem;padding:.85rem 1.6rem;border-radius:.55rem;background:#8fddff;color:#091421;font-weight:800;text-decoration:none}
+button{position:absolute;top:1rem;right:1rem;padding:.55rem .8rem;border:1px solid #ffffff8c;border-radius:.4rem;background:#080d17dd;cursor:pointer}
+a:focus-visible,button:focus-visible{outline:3px solid white;outline-offset:4px}
+@keyframes camera{from{transform:scale(1)}to{transform:scale(1.09)}}
+@keyframes pulse{from{opacity:.18}to{opacity:.84}}
+@keyframes fall{from{transform:translate3d(0,0,0) rotate(0);opacity:0}12%,86%{opacity:.85}to{transform:translate3d(var(--drift),115vh,0) rotate(590deg);opacity:0}}
+.paused *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){main:not(.motion-enabled) *{animation:none!important}main:not(.motion-enabled) .petals{visibility:hidden}}
+@media(max-aspect-ratio:1/1){
+.frame{width:100vw;height:auto;aspect-ratio:1672 / 941}
+.scene{background:radial-gradient(ellipse at center,#4b3547 5%,#13192b 58%,#0b101c 88%)}
+.frame{mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent)}
+}
+</style>
+<main>
+<div class="scene"><div class="frame"><img src="./cover.webp" alt="Godzilla and Mothra playing a tile puzzle at sunset"><div class="glow" aria-hidden="true"></div></div></div>
+<div class="shade" aria-hidden="true"></div>
+<div class="petals" aria-hidden="true"></div>
+<button type="button">Pause animation</button>
+<h1>Edge Match <span>64</span></h1>
+<div><a href="https://classroom-edge-match-64.biggyclops.chatgpt.site/" target="_blank" rel="noopener noreferrer">Play Edge Match <span aria-label="(opens in a new tab)">↗</span></a></div>
+</main>
+<script>
+const stage = document.querySelector('main');
+const petalLayer = document.querySelector('.petals');
+const toggle = document.querySelector('button');
+for (let index = 0; index < 24; index++) {
+  const petal = document.createElement('i');
+  petal.className = 'petal';
+  petal.style.setProperty('--x', (index * 31 % 100) + '%');
+  petal.style.setProperty('--size', (5 + index * 7 % 9) + 'px');
+  petal.style.setProperty('--speed', (8 + index * 13 % 13 + index % 7) + 's');
+  petal.style.setProperty('--delay', (-index * 1.19) + 's');
+  petal.style.setProperty('--drift', (index * 19 % 24 - 12) + 'vw');
+  petalLayer.append(petal);
+}
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let motionOverride = null;
+function syncMotion() {
+  const playing = motionOverride ?? !reducedMotion.matches;
+  stage.classList.toggle('paused', !playing);
+  stage.classList.toggle('motion-enabled', motionOverride === true);
+  toggle.textContent = playing ? 'Pause animation' : 'Play animation';
+}
+toggle.addEventListener('click', () => {
+  motionOverride = !(motionOverride ?? !reducedMotion.matches);
+  syncMotion();
+});
+reducedMotion.addEventListener('change', syncMotion);
+syncMotion();
+</script>
+</html>

@@ -966,7 +966,11 @@ export default function App() {
                   src={asset(launch.launchUrl)}
                   title={launch.title}
                   allow="fullscreen; autoplay"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+                  sandbox={
+                    launch.launchUrl === "/games/edge-match-64/index.html"
+                      ? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                      : "allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+                  }
                 />
                 <button className="secondary" onClick={() => setLaunch(null)}>
                   <ChevronLeft size={16} /> Back to ClassArcade

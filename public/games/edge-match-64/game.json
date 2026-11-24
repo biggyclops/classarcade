@@ -1,0 +1,11 @@
+{
+  "title": "Edge Match 64",
+  "short": "EDGE MATCH 64",
+  "genre": "Tile puzzle",
+  "skill": "Spatial reasoning",
+  "description": "Rotate tiles to match their edges. Start with a warm-up, work through harder puzzles, or choose your own board size.",
+  "color": "#8fddff",
+  "time": "10 min",
+  "classroom": ["Algebra 1A", "Algebra 1B", "Individualized Instruction"],
+  "cover": "cover.webp"
+}
