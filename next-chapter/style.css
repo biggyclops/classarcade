@@ -6,22 +6,118 @@
 .week-status > * { background: #e1efe7; padding: .5rem .75rem; border-radius: 8px; }
 .week-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; }
 .week-map {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(55px, 1fr));
+  position: relative;
+  aspect-ratio: 3 / 2;
   border-radius: 12px;
-  overflow: hidden;
-  background: linear-gradient(#17453488,#17453488), url('./town.webp') center / cover;
+  isolation: isolate;
+  background: #6f5643 url('./town.webp') center / cover;
 }
 .week-map:focus-visible { outline: 3px solid #227b61; outline-offset: 3px; }
-.week-place, .week-player { place-self: center; font-size: .8rem; text-align: center; }
-.week-place { color: #173b2f; background: #fffaf3; border-radius: 6px; padding: .2rem; overflow-wrap: anywhere; }
-.week-player { color: #fff; background: #15563f; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; transform: translateY(17px); }
+.week-place {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #173b2f;
+  background: #fffaf3;
+  border-radius: 8px;
+  padding: .3rem .4rem;
+  font-size: clamp(.68rem, 2vw, .85rem);
+  box-shadow: 0 2px 6px #1b1d1a70;
+}
+.week-player {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, 12px);
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #15563f;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 3px 8px #16201da0;
+  transition: left .45s ease, top .45s ease;
+}
 .week-visit .btn { margin: .25rem; }
-.week-room { display: flex; align-items: center; justify-content: center; gap: .75rem; min-height: 90px; margin: 1rem 0; border-radius: 8px; background: #d3e8d7; }
-.week-room.blue { background: #d6eaff; }
-.week-room.peach { background: #ffddca; }
-.week-room [role="img"] { font-size: 2rem; }
+.week-room {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  margin: 1rem 0;
+  border-radius: 8px;
+  background: #a8bc9c url('./room.webp') center / cover;
+}
+.week-room.blue { background-image: linear-gradient(#497da84a,#497da81f), url('./room.webp'); }
+.week-room.peach { background-image: linear-gradient(#ef884051,#ef884022), url('./room.webp'); }
+.week-room-empty {
+  position: absolute;
+  bottom: 4%;
+  left: 4%;
+  color: #173b2f;
+  background: #fffaf3;
+  padding: .2rem .45rem;
+  border-radius: .35rem;
+  font-size: .75rem;
+}
+.week-furniture { position: absolute; display: block; }
+.week-furniture--bed {
+  left: 43%; bottom: 13%; width: 40%; height: 24%;
+  background: linear-gradient(175deg,#f4e3d6 0 26%,#729692 27% 78%,#a36440 79%);
+  border: 2px solid #82543b;
+  border-radius: 20% 20% 7% 7%;
+  box-shadow: 0 5px 5px #45290555;
+}
+.week-furniture--desk {
+  left: 11%; bottom: 17%; width: 23%; height: 25%;
+  background: linear-gradient(90deg,#784b32 10%,transparent 10% 90%,#784b32 90%);
+  border-top: clamp(4px, 1.1vw, 10px) solid #a26740;
+  box-shadow: 0 -3px 0 #bb865a;
+}
+.week-furniture--lamp {
+  left: 29%; bottom: 42%; width: 9%; height: 17%;
+  background: linear-gradient(#f6d194 0 51%,#8a6036 52% 100%);
+  clip-path: polygon(23% 0,77% 0,100% 55%,56% 55%,56% 91%,77% 91%,77% 100%,23% 100%,23% 91%,44% 91%,44% 55%,0 55%);
+  filter: drop-shadow(0 0 6px #ffde83);
+}
+.week-job-art {
+  height: clamp(90px, 16vw, 165px);
+  margin-bottom: .75rem;
+  border-radius: .55rem;
+  background: #694334 url('./town.webp') no-repeat;
+  background-size: 290% auto;
+}
+.week-job-art--cafe { background-position: 0 76%; }
+.week-job-art--warehouse { background-position: 1% 18%; }
+.week-pay-stub {
+  margin: 1rem 0;
+  padding: 1rem 1.25rem;
+  background: #fffdf8;
+  border: 1px solid #e3d9ca;
+  border-top: 5px solid #287956;
+  box-shadow: 0 6px 18px #462f1514;
+  border-radius: .55rem;
+  animation: week-payday-in .45s ease-out both;
+}
+.week-pay-stub > div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.4rem; }
+.week-pay-stub > div span { color:#52665b; }
+.week-pay-stub dl { display:grid; grid-template-columns:1fr auto; gap:.35rem 1rem; margin-bottom:0; }
+.week-pay-stub dd { margin:0; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+.week-pay-stub dt:last-of-type, .week-pay-stub dd:last-of-type { border-top:1px solid #e3d9ca; padding-top:.45rem; font-weight:800; }
+.week-savings h3 { margin-bottom:.45rem; }
+.week-progress { height: .75rem; background:#d4e5d9; border-radius:.5rem; overflow:hidden; }
+.week-progress span { display:block; height:100%; background:#287956; animation:week-fill .9s ease-out both; transform-origin:left; }
+@keyframes week-payday-in { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes week-fill { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.budget-cards, .budget-deltas { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,125px),1fr)); gap:.5rem; margin:.65rem 0 1rem; }
+.budget-card, .budget-delta { display:grid; align-content:start; gap:.18rem; padding:.65rem; background:#eaf2e7; border:1px solid #c9dfcd; border-radius:.55rem; }
+.budget-card.warning { background:#fff0e7; border-color:#e9bba4; }
+.budget-card span, .budget-card small, .budget-delta span { font-size:.78rem; }
+.budget-card strong, .budget-delta strong { font-variant-numeric:tabular-nums; }
+.budget-delta.changed { background:#def2e2; border-color:#50956d; }
+@media (prefers-reduced-motion:reduce) {
+  .week-player { transition:none; }
+  .week-pay-stub, .week-progress span { animation:none; }
+}
 .week-recap fieldset { margin: .8rem 0; }
 .week-recap fieldset label { display: inline-flex; align-items: center; gap: .3rem; margin-right: 1rem; }
 .week-recap textarea { display: block; width: 100%; margin: .4rem 0; }

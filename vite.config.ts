@@ -13,15 +13,28 @@ function buildRevision() {
   }
 }
 
-const updateDate = new Intl.DateTimeFormat("en-US", {
+const releaseDateFormat = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeZone: "America/New_York",
-}).format(new Date());
+});
+
+function nextChapterRelease() {
+  try {
+    const [version, date] = execFileSync("git", [
+      "log", "-1", "--format=%h%n%cI", "--", "next-chapter", "public/games/next-chapter", "scripts/build-next-chapter.mjs",
+    ], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().split("\n");
+    if (version && date) return { version, date: releaseDateFormat.format(new Date(date)) };
+  } catch {
+    // Source archives may have no Git history.
+  }
+  return null;
+}
 
 export default defineConfig({
   define: {
     __CLASSARCADE_VERSION__: JSON.stringify(buildRevision()),
-    __CLASSARCADE_UPDATE_DATE__: JSON.stringify(updateDate),
+    __CLASSARCADE_UPDATE_DATE__: JSON.stringify(releaseDateFormat.format(new Date())),
+    __NEXT_CHAPTER_RELEASE__: JSON.stringify(nextChapterRelease()),
   },
   base: "./",
   plugins: [react()],

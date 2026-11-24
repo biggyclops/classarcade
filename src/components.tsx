@@ -32,6 +32,7 @@ export function GameCard({
   toggle: () => void;
   wide?: boolean;
 }) {
+  const release = game.launchUrl === "/games/next-chapter/index.html" ? __NEXT_CHAPTER_RELEASE__ : null;
   return (
     <motion.article
       className={"game-card " + (wide ? "wide" : "")}
@@ -42,10 +43,12 @@ export function GameCard({
         className="card-open"
         onClick={onOpen}
         aria-label={`View ${game.title}`}
+        aria-description={release ? `Version ${release.version}, updated ${release.date}` : undefined}
       >
         <div className="cover">
           <Artwork game={game} />
           <div className="cover-shade" />
+          {release && <span className="game-release-badge">v{release.version}</span>}
           <div className={"game-wordmark wordmark-" + game.id}>
             {game.short}
             <small>
@@ -62,6 +65,7 @@ export function GameCard({
         <div className="card-caption">
           <strong>{game.title}</strong>
           <small>{game.genre}</small>
+          {release && <small className="game-release-date">Updated {release.date}</small>}
         </div>
       </button>
       <button

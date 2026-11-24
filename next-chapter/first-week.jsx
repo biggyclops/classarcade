@@ -1,21 +1,22 @@
 import React, {useState} from 'react';
 
 const places = [
-  {id:'home', name:'Home', x:2, y:1},
-  {id:'cafe', name:'Café', x:0, y:1},
-  {id:'warehouse', name:'Warehouse', x:4, y:0},
-  {id:'grocery', name:'Grocery store', x:4, y:3},
-  {id:'thrift', name:'Thrift shop', x:0, y:3},
+  {id:'home', name:'Home', x:2, y:1, mapX:54, mapY:23},
+  {id:'cafe', name:'Café', x:0, y:1, mapX:13, mapY:73},
+  {id:'warehouse', name:'Warehouse', x:4, y:0, mapX:18, mapY:24},
+  {id:'grocery', name:'Grocery store', x:4, y:3, mapX:52, mapY:73},
+  {id:'thrift', name:'Thrift shop', x:0, y:3, mapX:85, mapY:78},
 ];
 const baseJobs = {
   cafe:{name:'Café', pay:288, commute:0, description:'Four shifts. Walk to work for free.'},
   warehouse:{name:'Warehouse', pay:384, commute:48, description:'Four early shifts. Set aside money for rides before the bus starts running.'},
 };
 const baseFurniture = [
-  {id:'bed', name:'Bed and mattress', price:150, icon:'🛏️'},
-  {id:'desk', name:'Used desk', price:35, icon:'🪑'},
-  {id:'lamp', name:'Reading lamp', price:20, icon:'💡'},
+  {id:'bed', name:'Bed and mattress', price:150},
+  {id:'desk', name:'Used desk', price:35},
+  {id:'lamp', name:'Reading lamp', price:20},
 ];
+const goalIcons = {move:'🔑', car:'🚗', training:'🎓'};
 const goals = [
   {id:'move', name:'Move out with a friend', cost:1600},
   {id:'car', name:'Save for a used car', cost:2400},
@@ -78,6 +79,9 @@ export default function FirstWeek({exit}) {
 
   const extraPay = job ? Math.round(job.pay / 4) - (job.commute / 4) : 0;
   const goal = goals.find(option=>option.id===week.goal);
+  const savingsTarget = goal || {id:'move',name:'Move-in fund',cost:1600};
+  const savingsProgress = Math.min(week.cash,savingsTarget.cost);
+  const remaining = Math.max(0,savingsTarget.cost-week.cash);
 
   function travel(place) {
     setWeek(w=>({...w,position:place,place:place.id}));
@@ -130,10 +134,27 @@ export default function FirstWeek({exit}) {
     <h1>{week.number===1?'First Week Challenge':'Week 2 · Your next goal'}</h1>
     {week.done?<section className="paper week-recap">
       <h2>You made it to payday</h2>
-      <p>{job.name} paid <strong>{dollars(job.pay)}</strong> for four regular shifts{week.extra?<> plus {dollars(extraPay)} net for the extra shift</>:null}. You finished with <strong>{dollars(week.cash)}</strong>.</p>
-      <p>Food {dollars(week.groceries)} · Commute {dollars(job.commute)} · Furniture {dollars(week.furnitureSpend)}</p>
+      <div className="week-pay-stub">
+        <div><strong>{job.name} pay stub</strong><span>Week {week.number} · Four regular shifts</span></div>
+        <dl>
+          <dt>Regular pay</dt><dd>{dollars(job.pay)}</dd>
+          {week.extra?<><dt>Extra shift after travel</dt><dd>{dollars(extraPay)}</dd></>:null}
+          <dt>Food</dt><dd>−{dollars(week.groceries)}</dd>
+          <dt>Commute</dt><dd>−{dollars(job.commute)}</dd>
+          <dt>Furniture</dt><dd>−{dollars(week.furnitureSpend)}</dd>
+          <dt>Cash at payday</dt><dd>{dollars(week.cash)}</dd>
+        </dl>
+      </div>
       {previous?<p>Last run: {previous.job}, {dollars(previous.cash)} left.</p>:null}
-      <p>{goal?<>{goal.name} · {dollars(goal.cost)} target. {week.cash<goal.cost?dollars(goal.cost-week.cash)+' to go.':'Goal reached!'}</>:'Keep your cash and furniture and choose a savings goal in Week 2.'}</p>
+      <section className="week-savings">
+        <h3><span aria-hidden="true">{goalIcons[savingsTarget.id]}</span> {savingsTarget.name}</h3>
+        <div className="week-progress" role="progressbar" aria-label={savingsTarget.name}
+          aria-valuenow={savingsProgress} aria-valuemax={savingsTarget.cost}>
+          <span style={{width:(100*savingsProgress/savingsTarget.cost)+'%'}}/>
+        </div>
+        <p>{dollars(savingsProgress)} of {dollars(savingsTarget.cost)} · {remaining?dollars(remaining)+' to go':'Goal reached!'}</p>
+        {!goal?<p>Keep your cash and furniture and choose your own goal in Week 2.</p>:null}
+      </section>
       {week.extra===false?<p>You kept Friday night free.</p>:null}
       <div className="actions">
         {week.number===1?<button className="btn" onClick={continueWeek}>Continue to Week 2</button>:null}
@@ -158,6 +179,7 @@ export default function FirstWeek({exit}) {
       <p className="lead" role="status">{objective}</p>
       {!job?<section className="week-job-offers" aria-label="Compare job offers">
         {Object.entries(jobs).map(([id,offer])=><article key={id} className="paper">
+          <div className={`week-job-art week-job-art--${id}`} aria-hidden="true" />
           <h2>{offer.name}</h2>
           <p>{id==='cafe'?'3–7 p.m. · Walk':'5–9 a.m. · Rides'}</p>
           <p>Take-home pay {dollars(offer.pay)} · Commute {dollars(offer.commute)}</p>
@@ -170,8 +192,9 @@ export default function FirstWeek({exit}) {
           <h2>Town</h2>
           <p id="week-help">Click a building to visit it, or move with WASD or the arrow keys and press Enter.</p>
           <div className="week-map" tabIndex={0} role="region" aria-label="Town map" aria-describedby="week-help" onKeyDown={mapKey}>
-            {places.map(place=><button type="button" key={place.id} className="week-place" aria-label={`Visit ${place.name}`} onClick={()=>travel(place)} style={{gridColumn:place.x+1,gridRow:place.y+1}}>{place.name}</button>)}
-            <span className="week-player" aria-hidden="true" style={{gridColumn:week.position.x+1,gridRow:week.position.y+1}}>●</span>
+            {places.map(place=><button type="button" key={place.id} className="week-place" aria-label={`Visit ${place.name}`} onClick={()=>travel(place)} style={{left:place.mapX+'%',top:place.mapY+'%'}}>{place.name}</button>)}
+            <span className="week-player" aria-hidden="true" style={{left:(target?.mapX ?? (12+week.position.x*19))+'%',
+              top:(target?.mapY ?? (23+week.position.y*18))+'%'}}><span>🧍</span></span>
           </div>
           <div className="week-directions" role="group" aria-label="Move around town">
             {[['ArrowLeft','←','left'],['ArrowUp','↑','up'],['ArrowDown','↓','down'],['ArrowRight','→','right']].map(([key,arrow,label])=>
@@ -191,8 +214,8 @@ export default function FirstWeek({exit}) {
               </label>)}
             </fieldset>:null}
             <p>You’re staying with family this week. Save toward a place of your own or make this room yours.</p>
-            <div className={'week-room '+week.color} aria-label="Your furnished room">
-              {week.owned.length?furniture.filter(item=>week.owned.includes(item.id)).map(item=><span key={item.id} role="img" aria-label={item.name}>{item.icon}</span>):<span>Your room is empty.</span>}
+            <div className={'week-room '+week.color} role="group" aria-label="Your furnished room">
+              {week.owned.length?furniture.filter(item=>week.owned.includes(item.id)).map(item=><span key={item.id} className={`week-furniture week-furniture--${item.id}`} role="img" aria-label={item.name}/>):<span className="week-room-empty">Your room is empty</span>}
             </div>
             <label>Wall color <select value={week.color} onChange={e=>setWeek({...week,color:e.target.value})}><option value="sage">Sage</option><option value="blue">Sky blue</option><option value="peach">Peach</option></select></label>
             {week.paid?<div className="actions"><button className="btn" onClick={()=>setWeek({...week,done:true})}>Finish week</button></div>:null}

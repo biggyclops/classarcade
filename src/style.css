@@ -3096,3 +3096,21 @@ dialog::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .slope-bird-intro .slope-bird-wing.is-flapping { animation-duration: 1ms; animation-iteration-count: 1; }
 }
+
+.game-release-badge {
+  position: absolute;
+  left: .55rem;
+  top: .55rem;
+  padding: .2rem .42rem;
+  border-radius: .3rem;
+  color: #fff;
+  background: #131922ed;
+  font-size: .7rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.card-caption .game-release-date {
+  display: block;
+  font-size: .69rem;
+  color: #c1becd;
+}
