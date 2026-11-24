@@ -128,6 +128,14 @@ export default function App() {
   function play(g: Game) {
     setRecent((x) => [g.id, ...x.filter((i) => i !== g.id)]);
     setLaunch(g);
+    if (g.launchUrl === "/games/edge-match-64/index.html") {
+      const roar = new Audio(asset("/games/edge-match-64/roar.mp3"));
+      roar.volume = 0.35;
+      void roar.play().catch(() => {
+        /* The game can open even when playback is blocked. */
+      });
+      return;
+    }
     if (sound) {
       try {
         const c = new AudioContext();
