@@ -38,27 +38,24 @@ const slopeBirdUrl = "/games/slope-bird/index.html";
 const slopeBirdCover = "/games/slope-bird/cover.webp";
 
 function SlopeBirdIntro({ onFinish }: { onFinish: () => void }) {
-  const [loaded, setLoaded] = useState(false);
-  const cover = asset(slopeBirdCover);
+  const [coverReady, setCoverReady] = useState(false);
+  const [downstrokeReady, setDownstrokeReady] = useState(false);
   return (
     <div className="slope-bird-intro">
       <img
-        src={cover}
+        src={asset(slopeBirdCover)}
         alt="Slope Bird"
-        onLoad={() => setLoaded(true)}
+        onLoad={() => setCoverReady(true)}
         onError={onFinish}
       />
-      {loaded && (
-        <>
-          <div className="slope-bird-wing-background" aria-hidden="true" />
-          <img
-            className="slope-bird-wing"
-            src={cover}
-            alt=""
-            onAnimationEnd={onFinish}
-          />
-        </>
-      )}
+      <img
+        className={coverReady && downstrokeReady ? "slope-bird-wing is-flapping" : "slope-bird-wing"}
+        src={asset("/games/slope-bird/wings-down.webp")}
+        alt=""
+        onLoad={() => setDownstrokeReady(true)}
+        onError={onFinish}
+        onAnimationEnd={onFinish}
+      />
     </div>
   );
 }
