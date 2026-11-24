@@ -32,7 +32,14 @@ export function GameCard({
   toggle: () => void;
   wide?: boolean;
 }) {
-  const release = game.launchUrl === "/games/next-chapter/index.html" ? __NEXT_CHAPTER_RELEASE__ : game.id === 3 ? { version: "1.0", date: "Nov 24, 2026" } : null;
+  let release = null;
+  if (game.launchUrl === "/games/next-chapter/index.html") {
+    release = __NEXT_CHAPTER_RELEASE__;
+  } else if (game.launchUrl === "/games/pemdas-power-run/index.html") {
+    release = { version: "0.2", date: "Nov 24, 2026" };
+  } else if (game.id === 3) {
+    release = { version: "1.0", date: "Nov 24, 2026" };
+  }
   return (
     <motion.article
       className={"game-card " + (wide ? "wide" : "")}
