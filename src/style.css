@@ -2967,3 +2967,104 @@ dialog::backdrop {
 .immersive-edition .workspace{min-height:calc(100vh - 79px)}
 .immersive-edition .footer-letter{display:none}
 @media(max-width:700px){.immersive-edition .role{top:16px}.immersive-edition .top-actions>.icon-button{top:14px}.immersive-edition .workspace{min-height:calc(100vh - 113px)}}
+
+.equation-background {
+  container-type: size;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.equation-flyby {
+  position: absolute;
+  inset: 40% auto auto 50%;
+  width: max(100cqw, calc(100cqh * 1672 / 941));
+  aspect-ratio: 1672 / 941;
+  transform: translate(-50%, -40%);
+  transform-origin: 69% 50%;
+  animation: equation-orbital-drift 14s ease-in-out infinite;
+}
+
+.equation-flyby img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.equation-engine-light,
+.equation-station-light {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+}
+
+.equation-engine-light {
+  background:
+    radial-gradient(ellipse 9% 11% at 83% 67%, #45b1ff96, transparent),
+    radial-gradient(ellipse 8% 10% at 93% 59%, #5ac2ff9e, transparent);
+  animation: equation-engine-pulse 7s ease-in-out infinite;
+}
+
+.equation-station-light {
+  background: radial-gradient(ellipse 9% 12% at 85% 12%, #79bbff70, transparent);
+  opacity: 0;
+  animation: equation-station-beacon 14s ease-in-out infinite;
+}
+
+.equation-escort {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: equation-escort-pass 14s linear infinite;
+}
+
+.equation-escort i {
+  position: absolute;
+  top: 49%;
+  left: 54%;
+  width: 5%;
+  height: 2px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, #ee9348a3 77%, #fff1c8);
+  box-shadow: 0 0 5px #ff9d5350;
+  transform: rotate(-24deg);
+}
+
+.equation-escort i:nth-child(2) { top: 52%; left: 51%; }
+.equation-escort i:nth-child(3) { top: 53%; left: 56%; }
+
+@keyframes equation-orbital-drift {
+  0%, 100% { transform: translate(-50%, -40%) scale(1); }
+  50% { transform: translate(-50.8%, -39.5%) scale(1.06) rotate(-0.35deg); }
+}
+
+@keyframes equation-engine-pulse {
+  0%, 100% { opacity: 0.18; }
+  48% { opacity: 0.79; }
+  72% { opacity: 0.38; }
+}
+
+@keyframes equation-station-beacon {
+  0%, 42%, 71%, 100% { opacity: 0; }
+  54% { opacity: 0.8; }
+}
+
+@keyframes equation-escort-pass {
+  0%, 16% { transform: translate(0, 0); opacity: 0; }
+  20% { opacity: 0.85; }
+  35% { opacity: 0.9; }
+  46%, 100% { transform: translate(52%, -39%); opacity: 0; }
+}
+
+@media (max-width: 700px) {
+  .equation-flyby {
+    left: 65%;
+    top: 50%;
+  }
+
+  @keyframes equation-orbital-drift {
+    0%, 100% { transform: translate(-65%, -50%); }
+    50% { transform: translate(-66%, -49.5%) scale(1.06); }
+  }
+
+  .equation-flyby { transform: translate(-65%, -50%); }
+}

@@ -24,24 +24,31 @@ export function ImmersiveHome({
     <section className="immersive-hero">
       <AnimatePresence mode="wait">
         <motion.div
-          className="immersive-background"
+          className={featured.id === 3 ? "immersive-background equation-background" : "immersive-background"}
           key={selected}
           initial={{ opacity: 0, scale: 1.025 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <img
-            className="art"
-            src={asset(
-              featured.id === 3
-                ? "/art/equation-banner.webp"
-                : featured.id === 0
-                  ? "/art/slope-banner.webp"
-                  : `/art/game-${featured.id}.webp`,
-            )}
-            alt=""
-          />
+          {featured.id === 3 ? (
+            <div className="equation-flyby" aria-hidden="true">
+              <img src={asset("/art/equation-banner.webp")} alt="" />
+              <div className="equation-engine-light" />
+              <div className="equation-station-light" />
+              <div className="equation-escort">
+                <i />
+                <i />
+                <i />
+              </div>
+            </div>
+          ) : (
+            <img
+              className="art"
+              src={asset(featured.id === 0 ? "/art/slope-banner.webp" : `/art/game-${featured.id}.webp`)}
+              alt=""
+            />
+          )}
         </motion.div>
       </AnimatePresence>
       <div className="immersive-fade" />
