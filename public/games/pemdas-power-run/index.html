@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PEMDAS Power Run</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d1023;color:#f7f5ff;font:16px system-ui,sans-serif}main{width:min(1080px,96vw);margin:24px auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:clamp(28px,5vw,48px);letter-spacing:-.06em}p{line-height:1.5}header p{margin:6px 0 14px;color:#bcbddd}.stage{position:relative;border:2px solid #686396;border-radius:16px;overflow:hidden;background:#242058}canvas{width:100%;display:block}.hud{position:absolute;top:3%;left:2%;right:2%;display:flex;justify-content:space-between;gap:4px;pointer-events:none;font-weight:800;font-size:clamp(10px,2vw,16px)}.hud span{background:#11142eea;border-radius:8px;padding:.45em .7em}button{background:#29284b;color:white;border:1px solid #686396;border-radius:8px;padding:10px 15px;font:inherit;font-weight:750;cursor:pointer}button:hover,button:focus-visible{background:#48417b;outline:2px solid #78f0db;outline-offset:2px}.controls{display:flex;gap:8px;margin-top:12px;touch-action:none}.controls button:last-child{margin-left:auto}.primary{background:#78f0db;color:#142136}.primary:hover,.primary:focus-visible{background:#affff1}dialog{width:min(510px,94vw);background:#191b35;color:white;border:2px solid #7b77ad;border-radius:18px;padding:24px}dialog::backdrop{background:#080919bc}h2{margin:0}.expression{display:block;margin:14px 0;font-weight:900;font-size:clamp(24px,6vw,42px);color:#ffda75}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.answers button:disabled{opacity:.65;cursor:default}.feedback{min-height:3em;color:#c8faee}.hint{color:#c4c4e2;font-size:.95rem}
+</style>
+<main>
+<header><div><h1>PEMDAS Power Run</h1><p>Jump into a ? block from below. Solve it to power up.</p></div><div><button id="music" aria-pressed="true">Music on</button> <button id="restart">Restart</button></div></header>
+<div class="stage"><canvas id="scene" width="960" height="480" aria-label="Side-scrolling platform game"></canvas><div class="hud"><span id="cells"></span><span id="power"></span><span id="sector"></span></div></div>
+<div class="controls"><button data-key="left">← Left</button><button data-key="right">Right →</button><button data-key="jump" class="primary">↑ Jump</button></div>
+<p class="hint">Keyboard: A / D or arrow keys to move. W, ↑, or Space to jump. Reach the portal at the end of each stage.</p>
+<p class="hint">Gold robots hop. Blue drones swoop. Red chargers flash before dashing. Purple armored bots can be jumped over or stopped with a shield.</p>
+</main>
+<dialog id="quiz" aria-labelledby="quizTitle">
+<h2 id="quizTitle">Power-up challenge</h2><p id="reward"></p><strong class="expression" id="expression"></strong>
+<div class="answers" id="answers"></div><p class="hint">Parentheses → Exponents → Multiply or divide left to right → Add or subtract left to right</p>
+<p id="feedback" class="feedback" role="status"></p><button id="resume" class="primary" hidden>Keep running</button>
+</dialog>
+<dialog id="finish" aria-labelledby="finishTitle"><h2 id="finishTitle">Run complete!</h2><p id="summary"></p><button id="again" class="primary">Play again</button></dialog>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const ctx = $('scene').getContext('2d');
+const width = 960, floor = 403, span = 2550;
+const powers = ['Shield', 'Speed boost', 'High jump'];
+const zones = [
+  {name:'Sunset Docks', sky:['#29245d','#f39176'], terrain:'#555887'},
+  {name:'Violet Foundry', sky:['#19163c','#a9519d'], terrain:'#66487f'},
+  {name:'Aurora Summit', sky:['#0e2549','#32a395'], terrain:'#345c76'},
+  {name:'Ember Causeway', sky:['#311631','#e76a48'], terrain:'#784450'},
+  {name:'Storm Relay', sky:['#141936','#626bad'], terrain:'#496082'},
+  {name:'Obsidian Orbit', sky:['#160e28','#593b83'], terrain:'#664882'},
+  {name:'Springworks', sky:['#192d47','#53a8aa'], terrain:'#416d80'},
+  {name:'Cloud Patrol', sky:['#262d66','#a5a5da'], terrain:'#536997'},
+  {name:'Copper Transit', sky:['#3e2431','#dd895f'], terrain:'#835340'},
+  {name:'Iron Bastion', sky:['#242c42','#8b9cbb'], terrain:'#506284'},
+  {name:'Neon Junction', sky:['#231b49','#a654a9'], terrain:'#51488d'},
+  {name:'Acid Canopy', sky:['#183343','#7f9e5d'], terrain:'#496957'},
+  {name:'Thunder Vault', sky:['#14204d','#706eb3'], terrain:'#545081'},
+  {name:'Molten Terminal', sky:['#3b1637','#ed795b'], terrain:'#825359'},
+  {name:'Midnight Gauntlet', sky:['#141536','#69508b'], terrain:'#4a4779'},
+  {name:'Zero Point', sky:['#13192f','#417d87'], terrain:'#455a7d'}
+];
+const courses = [
+  [[810,920],[1560,1680],[2010,2110]],
+  [[805,930],[1550,1685],[2000,2115]],
+  [[790,935],[1540,1690],[1990,2120]],
+  [[780,930],[1525,1680],[1980,2130]],
+  [[395,505],[775,935],[1520,1685],[1970,2135]],
+  [[390,520],[765,935],[1505,1680],[1965,2140]]
+];
+const advanced = [
+  {gaps:[[750,900],[1500,1660],[1980,2140]], types:['hopper']},
+  {gaps:[[390,510],[780,940],[1540,1700],[1980,2140]], types:['drone','hopper']},
+  {gaps:[[375,500],[750,915],[1510,1675],[1960,2125]], types:['charger','drone']},
+  {gaps:[[410,540],[765,930],[1500,1670],[1965,2135]], types:['armored','hopper','charger']},
+  {gaps:[[395,535],[750,920],[1510,1680],[1975,2145]], types:['drone','hopper','armored']},
+  {gaps:[[380,525],[760,930],[1510,1685],[1950,2120]], types:['hopper','charger','drone']},
+  {gaps:[[415,560],[780,955],[1505,1680],[1965,2140]], types:['drone','armored','charger','hopper']},
+  {gaps:[[400,550],[760,935],[1510,1685],[1950,2125]], types:['charger','armored','hopper','drone']},
+  {gaps:[[390,545],[750,925],[1500,1675],[1960,2135]], types:['armored','drone','charger','hopper']},
+  {gaps:[[380,540],[750,925],[1505,1680],[1965,2140]], types:['charger','hopper','armored','drone']}
+];
+const enemyShapes = {
+  crawler:{w:34,h:26,color:'#ee6e95'},
+  hopper:{w:28,h:25,color:'#ffbd65'},
+  drone:{w:37,h:23,color:'#68d9ff'},
+  charger:{w:35,h:25,color:'#ff7461'},
+  armored:{w:39,h:29,color:'#b0a5fa'}
+};
+const patrols = [500,1050,1350,1880,2350,690,1220,1810];
+const keys = new Set();
+let gaps, ground, level, coins, correct, attempted, blocks, bots, pickups, player, camera, tick, jumpQueued, activeBlock, feedbackTime, message;
+
+function loadStage(index) {
+  level = index;
+  const challenge = advanced[level-courses.length];
+  gaps = challenge?.gaps ?? courses[level];
+  const edges = [0,...gaps.flat(),span];
+  ground = edges.filter((_, i)=>i%2===0).map((left,i)=>[left,edges[2*i+1]]);
+  player = {x:62,y:floor-39,w:29,h:39,vy:0,ground:true,face:1,power:'',expires:0,checkpoint:62,grace:0};
+  camera = 0;
+  keys.clear();
+  jumpQueued = false;
+  message = zones[level].name;
+  feedbackTime = 125;
+  blocks = [275,590,1120,1420,1840,2260].map((x,i)=>({x,y:296-(i%2)*12,w:45,h:45,used:false,power:powers[(i+level)%3]}));
+  bots = patrols.filter(x=>ground.some(([a,b])=>x-40>=a&&x+74<=b)).slice(0,3+level).map(x=>({x,start:x,dir:1,alive:true}));
+  bots = challenge ? advancedEnemies(challenge) : bots.map(b=>({...b,type:'crawler',...enemyShapes.crawler,y:floor-26}));
+  pickups = [170,213,445,675,830,865,900,975,1230,1300,1510,1595,1638,1735,1930,2055,2175,2430].map(x=>({x,y:gaps.some(([a,b])=>x>a-8&&x<b+8)?345:370,live:true}));
+}
+function advancedEnemies(challenge) {
+  const points = [620,1050,1290,1780,2250,160,1140,1880,2340,1425,670,2415,1215,232];
+  const count = 8+Math.floor((level-courses.length)*2/3);
+  return points.filter(x=>ground.some(([a,b])=>x-35>=a&&x+74<=b))
+    .slice(0,count).map((x,i)=>{
+      const type = i%4===3?'crawler':challenge.types[(i-Math.floor(i/4))%challenge.types.length];
+      const shape = enemyShapes[type];
+      return {type,...shape,x,start:x,y:floor-shape.h,dir:1,alive:true,age:i*17,warning:false};
+    });
+}
+function moveEnemy(bot) {
+  bot.age=(bot.age??0)+1;
+  const phase=bot.age%104;
+  bot.warning=bot.type==='charger'&&phase>=44&&phase<65;
+  let speed=1+Math.min(level,8)*.27;
+  if(bot.type==='charger')speed=bot.warning?0:phase>=65?4.6:1.15;
+  if(bot.type==='armored')speed=.95+Math.min(level,15)*.035;
+  const reach=level<courses.length?36:31;
+  bot.x+=bot.dir*speed;
+  if(Math.abs(bot.x-bot.start)>=reach){
+    bot.dir=bot.x>bot.start?-1:1;
+    bot.x=bot.start-bot.dir*reach;
+  }
+  const hop=bot.type==='hopper'&&phase<40?64*Math.sin(Math.PI*phase/40):0;
+  const hover=bot.type==='drone'?52+32*Math.sin(bot.age*.045):0;
+  bot.y=floor-bot.h-hop-hover;
+}
+function reset() {
+  if ($('quiz').open) $('quiz').close();
+  if ($('finish').open) $('finish').close();
+  activeBlock = null;
+  coins = correct = attempted = tick = 0;
+  loadStage(0);
+}
+const random = (lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+function problem(tier, variant) {
+  const a=random(2,8), b=random(2,5), c=random(2,6), d=random(2,4);
+  const bank = [
+    [
+      [`${a} + ${b} × ${c}`,a+b*c,`${b} × ${c} = ${b*c}, then ${a} + ${b*c}`],
+      [`(${a} + ${b}) × ${c}`,(a+b)*c,`${a} + ${b} = ${a+b}, then ${a+b} × ${c}`],
+      [`${a*b} ÷ ${b} + ${c}`,a+c,`${a*b} ÷ ${b} = ${a}, then ${a} + ${c}`]
+    ],[
+      [`${a} + ${b}² × ${c}`,a+b*b*c,`${b}² = ${b*b}, then multiply by ${c}, then add ${a}`],
+      [`${a*b} ÷ ${b} × ${c}`,a*c,`Work left to right: ${a*b} ÷ ${b} = ${a}, then ${a} × ${c}`],
+      [`${a+10} − ${b} + ${c}`,a+10-b+c,`Work left to right: subtract ${b}, then add ${c}`]
+    ],[
+      [`(${a} + ${b})² − ${c} × ${d}`,(a+b)**2-c*d,`Square ${a+b} and multiply ${c} × ${d}, then subtract`],
+      [`${a*b} ÷ ${b} × (${c} + ${d})`,a*(c+d),`Parentheses give ${c+d}; divide first, then multiply`],
+      [`${a} + ${b} × (${c}² − ${d})`,a+b*(c*c-d),`Square ${c}, subtract ${d}, multiply by ${b}, then add ${a}`]
+    ],[
+      [`[${a*b} ÷ ${b} + ${c}]² − ${d}`,(a+c)**2-d,`Divide to get ${a}, add ${c}, square ${a+c}, then subtract ${d}`],
+      [`${a} − ${b} × (${c} + ${d})`,a-b*(c+d),`Add inside parentheses to get ${c+d}, multiply by ${b}, then subtract ${b*(c+d)} from ${a}`],
+      [`${a*b*c} ÷ ${b} ÷ ${c} + ${d}²`,a+d*d,`Divide left to right to get ${a}, then add ${d} squared`]
+    ],[
+      [`(${a} − ${b})² − ${c} × ${d} + ${b}`,(a-b)**2-c*d+b,`Square ${a-b} and multiply ${c} × ${d}, then subtract and add left to right`],
+      [`${a*b} ÷ [${b+d} − ${d}] × ${c}² − ${b}`,a*c*c-b,`Brackets give ${b}. Square ${c}, divide and multiply left to right, then subtract ${b}`],
+      [`${a} × [${b}² − (${c} + ${d})] + ${d}`,a*(b*b-c-d)+d,`Inside the brackets, subtract ${c+d} from ${b*b}. Multiply by ${a}, then add ${d}`]
+    ],[
+      [`[${a} + (${b} − ${c})²] × ${d} − ${b}²`,(a+(b-c)**2)*d-b*b,`Square ${b-c}, then add ${a}. Multiply by ${d} and subtract ${b*b}`],
+      [`${a*b*c} ÷ [${b+d} − ${d}] ÷ ${c} × ${d}²`,a*d*d,`Brackets give ${b}. Square ${d}, then divide, divide again, and multiply left to right`],
+      [`(${a} − ${b})³ + ${c} × [${d}² − ${a}]`,(a-b)**3+c*(d*d-a),`Cube ${a-b}. Inside brackets subtract ${a} from ${d*d}, multiply by ${c}, then add the two results`]
+    ]
+  ];
+  return bank[Math.min(tier,bank.length-1)][(variant+Math.max(0,tier-bank.length+1))%3];
+}
+function ask(block) {
+  block.used = true;
+  activeBlock = block;
+  attempted++;
+  keys.clear();
+  jumpQueued = false;
+  const [question, answer, steps] = problem(level,blocks.indexOf(block));
+  $('reward').textContent = 'Earn a ' + block.power.toLowerCase() + ' with a correct answer.';
+  $('expression').textContent = question;
+  $('feedback').textContent = '';
+  $('resume').hidden = true;
+  const options = new Set([answer]);
+  while(options.size<4) options.add(answer+random(-9,10));
+  const choices = [...options];
+  for(let i=choices.length-1;i>0;i--) {
+    const j=random(0,i);
+    [choices[i],choices[j]]=[choices[j],choices[i]];
+  }
+  $('answers').replaceChildren();
+  for(const value of choices) {
+    const button = document.createElement('button');
+    button.textContent = value;
+    button.onclick = () => {
+      for(const choice of $('answers').children) choice.disabled = true;
+      if(value === answer) {
+        correct++;
+        player.power = activeBlock.power;
+        player.expires = player.power === 'Shield' ? Infinity : tick+720;
+        $('feedback').textContent = 'Correct! ' + player.power + ' equipped.';
+      } else {
+        $('feedback').textContent = 'Power-up missed. ' + steps + '. Answer: ' + answer + '.';
+      }
+      $('resume').hidden = false;
+      $('resume').focus();
+    };
+    $('answers').append(button);
+  }
+  $('quiz').showModal();
+}
+$('quiz').addEventListener('cancel',e=>e.preventDefault());
+$('finish').addEventListener('cancel',e=>e.preventDefault());
+$('resume').onclick=()=>{activeBlock=null;$('quiz').close();};
+$('restart').onclick=$('again').onclick=reset;
+// An original eight-bar theme, synthesized locally without audio downloads.
+const melody = [
+  [76,0,79,81,79,76,74,0], [72,0,74,76,79,0,76,0],
+  [77,0,81,84,81,77,76,74], [71,74,79,0,74,0,76,0],
+  [76,79,84,0,83,79,76,0], [77,81,84,81,79,77,76,0],
+  [74,77,81,0,79,77,74,0], [71,74,79,74,72,0,0,0]
+];
+const bass = [48,45,41,43,48,41,50,43];
+let audio, musicGain, musicTimer, musicOn=true, beat=0, nextNote=0;
+function tone(note, at, duration, volume, type) {
+  const voice=audio.createOscillator(), envelope=audio.createGain();
+  voice.type=type;
+  voice.frequency.value=440*2**((note-69)/12);
+  envelope.gain.setValueAtTime(.0001,at);
+  envelope.gain.exponentialRampToValueAtTime(volume,at+.014);
+  envelope.gain.exponentialRampToValueAtTime(.0001,at+duration);
+  voice.connect(envelope).connect(musicGain);
+  voice.start(at);
+  voice.stop(at+duration+.01);
+}
+function scheduleMusic() {
+  if(audio.state!=='running')return;
+  const now=audio.currentTime;
+  const playing=musicOn&&!document.hidden&&!$('finish').open;
+  musicGain.gain.setTargetAtTime(playing ? ($('quiz').open ? .19 : .7) : 0,now,.04);
+  if(!playing){nextNote=now+.04;return;}
+  if(nextNote<now)nextNote=now+.04;
+  const eighth=30/(116+Math.min(level,7)*6);
+  while(nextNote<now+.12) {
+    const bar=Math.floor(beat/8), part=beat%8;
+    const note=melody[bar][part];
+    if(note)tone(note,nextNote,eighth*.88,.14,'triangle');
+    if(part%2===0)tone(bass[bar]+(part%4===2?7:0),nextNote,eighth*1.55,.15,'sine');
+    if(part%2===1)tone(bass[bar]+24,nextNote,eighth*.42,.032,'triangle');
+    beat=(beat+1)%64;
+    nextNote+=eighth;
+  }
+}
+function unlockMusic() {
+  if(!musicOn)return;
+  const Audio=window.AudioContext||window.webkitAudioContext;
+  if(!Audio)return;
+  if(!audio){
+    audio=new Audio();
+    musicGain=audio.createGain();
+    musicGain.gain.value=0;
+    musicGain.connect(audio.destination);
+    musicTimer=setInterval(scheduleMusic,45);
+  }
+  if(audio.state==='suspended')audio.resume().catch(()=>{});
+}
+function primeMusic(event) {
+  if(event.target!==$('music'))unlockMusic();
+}
+addEventListener('pointerdown',primeMusic);
+addEventListener('keydown',primeMusic);
+$('music').onclick=()=>{
+  musicOn=!musicOn;
+  $('music').textContent=musicOn?'Music on':'Music off';
+  $('music').setAttribute('aria-pressed',musicOn);
+  if(musicOn)unlockMusic();
+  if(musicTimer)scheduleMusic();
+};
+const mapping={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',Space:'jump',KeyA:'left',KeyD:'right',KeyW:'jump'};
+addEventListener('keydown',e=>{
+  const key=mapping[e.code];
+  if(!key||$('quiz').open||$('finish').open|| (e.code==='Space' && e.target.tagName==='BUTTON'))return;
+  e.preventDefault();
+  keys.add(key);
+  if(key==='jump'&&!e.repeat)jumpQueued=true;
+});
+addEventListener('keyup',e=>keys.delete(mapping[e.code]));
+addEventListener('blur',()=>{keys.clear();jumpQueued=false;});
+for (const button of document.querySelectorAll('[data-key]')) {
+  const key=button.dataset.key;
+  button.onpointerdown=e=>{
+    e.preventDefault();
+    button.setPointerCapture(e.pointerId);
+    keys.add(key);
+    if(key==='jump')jumpQueued=true;
+  };
+  button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>keys.delete(key);
+}
+const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+function respawn() {
+  player.x=player.checkpoint;
+  player.y=floor-player.h;
+  player.vy=0;
+  player.ground=true;
+  player.power='';
+  player.grace=38;
+  message='Back at the checkpoint';
+  feedbackTime=100;
+}
+function update() {
+  tick++;
+  if(player.grace>0)player.grace--;
+  if(tick>=player.expires)player.power='';
+  if(feedbackTime>0)feedbackTime--;
+  const direction=Number(keys.has('right'))-Number(keys.has('left'));
+  if(direction)player.face=direction;
+  player.x=Math.min(span-player.w,Math.max(0,player.x+direction*(player.power==='Speed boost'?6.3:4.25)));
+  if(jumpQueued&&player.ground)player.vy=player.power==='High jump'?-15:-11.9;
+  jumpQueued=false;
+  const previousY=player.y;
+  player.vy+=.52;
+  player.y+=player.vy;
+  player.ground=false;
+  const center=player.x+player.w/2;
+  if(!gaps.some(([a,b])=>center>a&&center<b) && previousY+player.h<=floor && player.y+player.h>=floor) {
+    player.y=floor-player.h;
+    player.vy=0;
+    player.ground=true;
+    for(const [,end] of gaps)if(center>end+35)player.checkpoint=end+28;
+  }
+  for(const b of blocks) {
+    if(!overlap(player,b))continue;
+    if(player.vy<0&&previousY>=b.y+b.h) {
+      player.y=b.y+b.h;
+      player.vy=1;
+      if(!b.used){ask(b);return;}
+    } else if(player.vy>=0&&previousY+player.h<=b.y) {
+      player.y=b.y-player.h;
+      player.vy=0;
+      player.ground=true;
+    }
+  }
+  if(player.y>510){respawn();return;}
+  for(const c of pickups)if(c.live&&overlap(player,{x:c.x-9,y:c.y-9,w:18,h:18})){c.live=false;coins++;}
+  for(const b of bots) {
+    if(!b.alive)continue;
+    moveEnemy(b);
+    if(player.grace||!overlap(player,b))continue;
+    if(b.type!=='armored'&&player.vy>0&&previousY+player.h<=b.y+5){
+      b.alive=false;
+      player.y=b.y-player.h;
+      player.vy=-8;
+    } else if(player.power==='Shield'){
+      b.alive=false;
+      player.power='';
+      message='Shield absorbed the hit';
+      feedbackTime=90;
+    } else {respawn();return;}
+  }
+  if(player.x>2470 && player.ground) {
+    if(level<zones.length-1)loadStage(level+1);
+    else {$('summary').textContent=`Power-ups earned: ${correct} of ${attempted} attempted. Energy cells collected: ${coins}.`;$('finish').showModal();}
+  }
+  camera=Math.min(span-width,Math.max(0,player.x-310));
+}
+function box(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
+function orb(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+function label(value,x,y,color,size,align='left'){
+  ctx.fillStyle=color;ctx.font=`900 ${size}px system-ui`;ctx.textAlign=align;ctx.fillText(value,x,y);
+}
+function draw() {
+  const zone=zones[level], grad=ctx.createLinearGradient(0,0,0,480);
+  grad.addColorStop(0,zone.sky[0]);grad.addColorStop(1,zone.sky[1]);
+  box(0,0,960,480,grad);
+  orb(737-camera*.075,155,65,'#ffdfa4');
+  for(let i=0;i<45;i++) {
+    const x=((i*149-camera*.10)%980+980)%980;
+    orb(x,65+(i*53)%158,i%4===0?2:1,'#ffffff75');
+  }
+  for(let i=-1;i<12;i++) {
+    const x=i*136-camera*.22, h=58+(i*53+70)%128;
+    box(x,371-h,108,h+32,'#2e315b9e');
+    for(let j=0;j<4;j++)box(x+12+j*21,387-h,9,4,'#eebfb363');
+  }
+  ctx.save();
+  ctx.translate(-camera,0);
+  for(const [a,b] of ground) {
+    box(a,floor,b-a,77,'#171930');
+    box(a,floor,b-a,18,zone.terrain);
+    box(a,floor,b-a,4,'#81f5d4');
+    for(let x=a+12;x<b-16;x+=38)box(x,floor+31,15,4,zone.terrain);
+  }
+  for(const b of blocks) {
+    box(b.x+4,b.y+5,b.w,b.h,'#242142');
+    box(b.x,b.y,b.w,b.h,b.used?'#494660':'#eabb53');
+    box(b.x+3,b.y+3,b.w-6,4,b.used?'#77728e':'#fff1a0');
+    box(b.x+5,b.y+11,b.w-10,b.h-15,b.used?'#575371':'#ffda75');
+    label(b.used?'·':'?',b.x+b.w/2,b.y+34,'#282341',30,'center');
+  }
+  for(const c of pickups)if(c.live){
+    const y=c.y+Math.sin(tick*.08+c.x)*4;
+    orb(c.x,y,9,'#52e6ca50');orb(c.x,y,6,'#85ffdf');box(c.x-2,y-4,3,5,'#f3fff4');
+  }
+  for(const b of bots)if(b.alive){
+    const {x,y,w,h,type,color}=b;
+    box(x+2,y+2,w-4,h-4,'#221e3b');
+    box(x,y+7,w,h-10,b.warning&&b.age%8<4?'#fff1a0':color);
+    box(x+6,y+4,w-12,8,'#302647');
+    orb(x+w/2+b.dir*5,y+8,2.5,'#fff0a1');
+    if(type==='crawler') {
+      box(x+3,y+h-5,7,5,'#432744');box(x+w-10,y+h-5,7,5,'#432744');
+    }
+    if(type==='hopper') {
+      box(x+7,y+h-5,w-14,5,'#ffe3a8');box(x+11,y+h-1,w-22,4,'#824853');
+    }
+    if(type==='drone') {
+      box(x-5,y+1,16,3,'#adf5ff');box(x+w-11,y+1,16,3,'#adf5ff');
+      box(x+8,y+h-2,w-16,3,'#dcfffc');
+    }
+    if(type==='charger') {
+      box(x+(b.dir>0?w-4:0),y+10,4,11,'#fff1a0');
+    }
+    if(type==='armored') {
+      box(x+2,y,w-4,5,'#e0daff');
+      for(let plate=5;plate<w-5;plate+=8)box(x+plate,y+13,3,7,'#e0daff');
+    }
+  }
+  const glow=.54+.21*Math.sin(tick*.12);
+  box(2467,306,57,97,'#24234b');box(2472,313,47,90,`rgba(86,255,213,${glow})`);
+  label('EXIT',2496,301,'#e5ffef',17,'center');
+  const {x,y,face}=player;
+  if(player.grace&&Math.floor(player.grace/4)%2)ctx.globalAlpha=.4;
+  if(player.power==='Shield'){orb(x+14,y+20,26,'#63f1ff66');}
+  box(x+3,y+13,23,19,'#e2efff');box(x+2,y+15,6,16,'#f988a7');
+  box(x+5,y+1,23,18,'#aee4f5');box(x+(face>0?12:5),y+5,15,9,'#272d55');
+  box(x+(face>0?22:7),y+7,3,4,'#82ffcf');box(x+11,y+23,12,5,'#65c2c9');
+  const stride=player.ground&&(keys.has('left')||keys.has('right'))?Math.sin(tick*.35)*3:0;
+  box(x+4,y+30,8,9+stride,'#292c55');box(x+18,y+30,8,9-stride,'#292c55');
+  ctx.restore();
+  if(feedbackTime){box(14,430,255,33,'#171930ce');label(message,25,453,'#e1fff5',16);}
+  $('cells').textContent='Cells '+coins;
+  $('power').textContent=player.power+(Number.isFinite(player.expires)&&player.power?' · '+Math.ceil((player.expires-tick)/60)+'s':'')||'No power-up';
+  $('sector').textContent='Stage '+(level+1)+' / '+zones.length;
+}
+let last, accumulator=0;
+function loop(now) {
+  accumulator+=Math.min(80,now-(last??now));
+  last=now;
+  while(accumulator>=1000/60){
+    if(!$('quiz').open&&!$('finish').open)update();
+    accumulator-=1000/60;
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+reset();
+requestAnimationFrame(loop);
+</script>
+</html>

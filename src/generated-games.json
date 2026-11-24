@@ -134,6 +134,23 @@
     "launchUrl": "/games/pemdas-power-plant/index.html"
   },
   {
+    "id": 1008,
+    "title": "PEMDAS Power Run",
+    "short": "PEMDAS POWER RUN",
+    "genre": "Platformer",
+    "skill": "Order of operations",
+    "description": "Jump into question blocks and solve PEMDAS problems to earn power-ups. Dodge five robot types across 16 stages with original arcade music.",
+    "color": "#81f5d4",
+    "time": "15+ min",
+    "progress": 0,
+    "classroom": [
+      "Algebra 1A",
+      "Individualized Instruction"
+    ],
+    "cover": "/games/pemdas-power-run/cover.webp",
+    "launchUrl": "/games/pemdas-power-run/index.html"
+  },
+  {
     "id": 1005,
     "title": "Slope-Intercept Laser Defense",
     "short": "LASER DEFENSE",

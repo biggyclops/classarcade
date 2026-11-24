@@ -1,0 +1,10 @@
+{
+  "title": "PEMDAS Power Run",
+  "genre": "Platformer",
+  "skill": "Order of operations",
+  "description": "Jump into question blocks and solve PEMDAS problems to earn power-ups. Dodge five robot types across 16 stages with original arcade music.",
+  "color": "#81f5d4",
+  "time": "15+ min",
+  "classroom": ["Algebra 1A", "Individualized Instruction"],
+  "cover": "cover.webp"
+}
