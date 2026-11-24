@@ -32,7 +32,7 @@ export function GameCard({
   toggle: () => void;
   wide?: boolean;
 }) {
-  const release = game.launchUrl === "/games/next-chapter/index.html" ? __NEXT_CHAPTER_RELEASE__ : null;
+  const release = game.launchUrl === "/games/next-chapter/index.html" ? __NEXT_CHAPTER_RELEASE__ : game.id === 3 ? { version: "1.0", date: "Nov 24, 2026" } : null;
   return (
     <motion.article
       className={"game-card " + (wide ? "wide" : "")}
