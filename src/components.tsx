@@ -37,6 +37,8 @@ export function GameCard({
     release = __NEXT_CHAPTER_RELEASE__;
   } else if (game.launchUrl === "/games/pemdas-power-run/index.html") {
     release = { version: "0.5", date: "Nov 24, 2026" };
+  } else if (game.launchUrl === "/games/slope-bird/index.html") {
+    release = { version: "1.1", date: "Nov 25, 2026" };
   } else if (game.id === 3) {
     release = { version: "1.0", date: "Nov 24, 2026" };
   }
