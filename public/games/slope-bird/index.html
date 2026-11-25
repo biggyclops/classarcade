@@ -16,7 +16,7 @@ select{font:inherit;border-radius:9px;padding:9px;background:#101b2e;color:#fff;
 </head>
 <body>
 <main>
-<header><div><small>3.1 • Relations and Functions</small><h1>Slope <span>Bird</span></h1></div><div class="meters"><div class="pill" id="score">0 / 18 gates</div><div class="pill" id="best">Best 0</div></div></header>
+<header><div><small>3.1 • Relations and Functions</small><h1>Slope <span>Bird</span></h1></div><div class="meters"><div class="pill" id="score">0 / 18 gates</div><div class="pill" id="best">Best 0</div><div class="pill" id="flightTime" aria-label="Flight time remaining" hidden></div></div></header>
 <div class="layout">
 <section aria-label="Flight course">
 <canvas id="course" width="780" height="470" aria-label="Coordinate grid with your glider, a wall, and its opening"></canvas>
@@ -46,7 +46,10 @@ const get = id => document.getElementById(id);
 const canvas = get('course');
 const ctx = canvas.getContext('2d');
 const colors = { mint:'#6ff2ce', gold:'#ffe383', ice:'#c6eaf2' };
+const flightDuration = 20;
+const flightTime = get('flightTime');
 let gate, phase, question, gapHalfHeight, birdX, birdY, velocity, step, clock, previous;
+let flightRemaining, wallCleared;
 const wingsUp = new Image();
 wingsUp.src = 'kingfisher-up.webp';
 const wingsDown = new Image();
@@ -155,6 +158,7 @@ function setupGate(){
   question = challenges[gate];
   gapHalfHeight = gate < 8 ? 1.7 : gate < 13 ? 1.55 : 1.4;
   phase = 'solve';
+  flightTime.hidden=true;
   birdX=0;
   birdY=0;
   get('gate').textContent='Gate '+(gate+1)+' / '+total;
@@ -200,7 +204,7 @@ get('answerForm').addEventListener('submit',event=>{
   const feedback=isChoice() ? (relationIsFunction(pairs)
     ? 'Each input has exactly one output. '
     : 'One input has two different outputs. ') : 'Correct. ';
-  setMessage(feedback+'Launch and flap to stay near y = '+shown(y)+'.');
+  setMessage(feedback+'Launch for 20 seconds of flight. Stay near y = '+shown(y)+' to clear the opening.');
   get('launch').focus();
 });
 get('hint').onclick=()=>{
@@ -209,9 +213,13 @@ get('hint').onclick=()=>{
 };
 get('restart').onclick=newRun;
 get('launch').onclick=()=>{
-  if(phase==='clear'){setupGate();answerControl().focus();return}
   if(phase!=='ready') return;
   phase='fly';
+  previous=undefined;
+  flightRemaining=flightDuration;
+  wallCleared=false;
+  flightTime.textContent=flightDuration+'s';
+  flightTime.hidden=false;
   downstrokeUntil=0;
   birdX=0;
   birdY=question.y;
@@ -237,45 +245,62 @@ window.addEventListener('keydown',event=>{
   }
 });
 
-function update(dt){
+function update(dt, elapsed){
   if(phase!=='fly') return;
   birdX+=step*dt;
   velocity-=6.8*dt;
   birdY+=velocity*dt;
   const distance=birdX-question.x;
-  const hitsWall=distance>-.19 && distance<.67 && Math.abs(birdY-question.y)>opening()-.28;
-  if(hitsWall || Math.abs(birdY)>7.4){
-    phase='ready';
-    get('flap').disabled=true;
-    get('launch').hidden=false;
-    get('launch').textContent='Retry flight';
-    get('heading').textContent='Try the flight again';
-    setMessage('Your answer is still correct. Flap a little sooner when the bird drops.');
-    get('launch').focus();
+  if(!wallCleared){
+    const hitsWall=distance>-.19 && distance<.67 && Math.abs(birdY-question.y)>opening()-.28;
+    if(hitsWall || Math.abs(birdY)>7.4){
+      phase='ready';
+      flightTime.hidden=true;
+      get('flap').disabled=true;
+      get('launch').hidden=false;
+      get('launch').textContent='Retry flight';
+      get('heading').textContent='Try the flight again';
+      setMessage('Your answer is still correct. Flap a little sooner when the bird drops.');
+      get('launch').focus();
+      return;
+    }
+    if(distance>=.67){
+      wallCleared=true;
+      get('heading').textContent='Keep flying';
+      setMessage('Opening cleared. Keep flapping until the next gate.');
+    }
+  }else{
+    if(birdX>8) birdX=0;
+    if(Math.abs(birdY)>7.4){
+      birdY=0;
+      velocity=0;
+    }
+  }
+
+  flightRemaining-=elapsed;
+  const countdown=Math.max(0,Math.ceil(flightRemaining))+'s';
+  if(flightTime.textContent!==countdown) flightTime.textContent=countdown;
+  if(wallCleared && flightRemaining<=1e-9) finishFlight();
+}
+function finishFlight(){
+  gate++;
+  if(gate>best){
+    best=gate;
+    try {localStorage.setItem('slope-wing-relations-best',String(best))} catch {}
+  }
+  flightTime.hidden=true;
+  if(gate<total){
+    setupGate();
+    answerControl().focus();
     return;
   }
-  if(distance>=.67){
-    gate++;
-    if(gate>best){
-      best=gate;
-      try {localStorage.setItem('slope-wing-relations-best',String(best))} catch {}
-    }
-    meters();
-    get('flap').disabled=true;
-    if(gate===total){
-      phase='done';
-      get('heading').textContent='Course complete!';
-      setMessage('You solved and flew through all '+total+' gates.');
-      get('restart').focus();
-    }else{
-      phase='clear';
-      get('heading').textContent='Gate cleared!';
-      setMessage('Ready for the next equation.');
-      get('launch').textContent='Next gate';
-      get('launch').hidden=false;
-      get('launch').focus();
-    }
-  }
+
+  phase='done';
+  meters();
+  get('flap').disabled=true;
+  get('heading').textContent='Course complete!';
+  setMessage('You solved and flew through all '+total+' gates.');
+  get('restart').focus();
 }
 function opening(){return gapHalfHeight}
 function line(x,y,xx,yy,color,width=1){
@@ -289,8 +314,9 @@ function background(){
   const sky=ctx.createLinearGradient(0,0,0,470);
   sky.addColorStop(0,'#101c3a');sky.addColorStop(.7,'#24536b');sky.addColorStop(1,'#477982');
   ctx.fillStyle=sky;ctx.fillRect(0,0,780,470);
+  const drift=phase==='fly' && wallCleared ? (clock*45)%780 : 0;
   for(let i=0;i<52;i++){
-    const x=(i*193+31)%780;
+    const x=(i*193+31-drift+780)%780;
     const y=(i*71+11)%290;
     ctx.globalAlpha=.23+.25*(1+Math.sin(clock*1.1+i))/2;
     ctx.fillStyle='#b8f7f5';ctx.fillRect(x,y,2,2);
@@ -354,11 +380,13 @@ function drawBird(){
   ctx.restore();
 }
 function frame(now){
-  const dt=Math.min(.032,(now-(previous??now))/1000);
+  const elapsed=(now-(previous??now))/1000;
+  const dt=Math.min(.032,elapsed);
   previous=now;
   clock+=dt;
-  update(dt);
-  background();grid();wall();
+  if(!document.hidden) update(dt,elapsed);
+  background();grid();
+  if(phase==='solve' || phase==='ready' || (phase==='fly' && !wallCleared)) wall();
   if(phase==='solve' && ['graph','vertical'].includes(question.kind)){
     for(const [x,y] of question.pairs){
       ctx.beginPath();ctx.arc(sx(x),sy(y),7,0,Math.PI*2);
@@ -369,6 +397,7 @@ function frame(now){
   drawBird();
   requestAnimationFrame(frame);
 }
+document.addEventListener('visibilitychange',()=>{previous=undefined});
 clock=0;
 newRun(false);
 requestAnimationFrame(frame);
