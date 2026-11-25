@@ -39,7 +39,7 @@ function gameFrameSource(path: string) {
   if (path === "/games/next-chapter/index.html" && __NEXT_CHAPTER_RELEASE__ && !source.startsWith("data:")) {
     return `${source}?release=${__NEXT_CHAPTER_RELEASE__.version}`;
   }
-  return path === laserDefenseUrl && !source.startsWith("data:")
+  return (path === laserDefenseUrl || path === slopeBirdUrl) && !source.startsWith("data:")
     ? `${source}?release=${__CLASSARCADE_VERSION__}`
     : source;
 }
